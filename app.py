@@ -3,6 +3,11 @@ from dotenv import load_dotenv
 import os
 import requests
 import providers
+import mimetypes
+
+# 強制映射 MIME 類型，修復 Windows 註冊表關聯造成的 CSS/JS 無法加載問題
+mimetypes.add_type('text/css', '.css')
+mimetypes.add_type('application/javascript', '.js')
 
 load_dotenv()
 app = Flask(__name__, 

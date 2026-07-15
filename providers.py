@@ -64,7 +64,7 @@ def translate(data: Dict) -> Dict:
         if not target:
             return {'ok': False, 'error': '目標語言代碼不能為空'}
         
-        print(f'📝 翻譯請求：{source or "自動檢測"} → {target}')
+        print(f'[INFO] 翻譯請求：{source or "自動檢測"} -> {target}')
         print(f'   文字：{text[:50]}{"..." if len(text) > 50 else ""}')
     
     except Exception as e:
@@ -107,7 +107,7 @@ def translate(data: Dict) -> Dict:
         # 提取翻譯結果
         translation = response.text.strip()
         
-        print(f'✓ 翻譯成功：{translation}')
+        print(f'[SUCCESS] 翻譯成功：{translation}')
         return {
             'ok': True,
             'translation': translation
@@ -116,19 +116,19 @@ def translate(data: Dict) -> Dict:
     except genai.types.APIError as e:
         # API 錯誤（如配額不足）
         error_msg = f'Gemini API 錯誤：{str(e)}'
-        print(f'✗ {error_msg}')
+        print(f'[ERROR] {error_msg}')
         return {'ok': False, 'error': error_msg}
     
     except ValueError as e:
         # API Key 未設置
         error_msg = str(e)
-        print(f'✗ {error_msg}')
+        print(f'[ERROR] {error_msg}')
         return {'ok': False, 'error': error_msg}
     
     except Exception as e:
         # 其他未預期的錯誤
         error_msg = f'翻譯過程發生錯誤：{str(e)}'
-        print(f'✗ {error_msg}')
+        print(f'[ERROR] {error_msg}')
         return {'ok': False, 'error': error_msg}
 
 
@@ -166,7 +166,7 @@ def _lang_name(code: str) -> str:
 # 4. 測試程式（執行此檔案時會運行）
 # ============================================
 if __name__ == '__main__':
-    print('🧪 測試 providers.py\n')
+    print('[TEST] 測試 providers.py\n')
     
     # 測試案例 1：中文 → 英文
     print('--- 測試 1：中文 → 英文 ---')
