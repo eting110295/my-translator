@@ -256,6 +256,9 @@ function initApp() {
     // 初始化事件監聽
     setupEventListeners();
 
+    // 初始化單人語音辨識
+    initSingleRecognizer();
+
     // 初始化面對面模式
     initFaceMode();
 }
