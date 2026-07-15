@@ -8,6 +8,16 @@ import google.generativeai as genai
 from typing import Dict
 
 
+def safe_print(msg: str):
+    try:
+        print(msg.encode('cp950', errors='replace').decode('cp950'))
+    except Exception:
+        try:
+            print(msg.encode('ascii', errors='backslashreplace').decode('ascii'))
+        except Exception:
+            pass
+
+
 # ============================================
 # 1. 初始化 Google Gemini API
 # ============================================
@@ -64,8 +74,8 @@ def translate(data: Dict) -> Dict:
         if not target:
             return {'ok': False, 'error': '目標語言代碼不能為空'}
         
-        print(f'[INFO] 翻譯請求：{source or "自動檢測"} -> {target}')
-        print(f'   文字：{text[:50]}{"..." if len(text) > 50 else ""}')
+        safe_print(f'[INFO] 翻譯請求：{source or "自動檢測"} -> {target}')
+        safe_print(f'   文字：{text[:50]}{"..." if len(text) > 50 else ""}')
     
     except Exception as e:
         return {'ok': False, 'error': f'參數驗證錯誤：{str(e)}'}
@@ -107,7 +117,7 @@ def translate(data: Dict) -> Dict:
         # 提取翻譯結果
         translation = response.text.strip()
         
-        print(f'[SUCCESS] 翻譯成功：{translation}')
+        safe_print(f'[SUCCESS] 翻譯成功：{translation}')
         return {
             'ok': True,
             'translation': translation
@@ -116,13 +126,13 @@ def translate(data: Dict) -> Dict:
     except ValueError as e:
         # API Key 未設置
         error_msg = str(e)
-        print(f'[ERROR] {error_msg}')
+        safe_print(f'[ERROR] {error_msg}')
         return {'ok': False, 'error': error_msg}
     
     except Exception as e:
         # 其他未預期的錯誤
         error_msg = f'翻譯過程發生錯誤：{str(e)}'
-        print(f'[ERROR] {error_msg}')
+        safe_print(f'[ERROR] {error_msg}')
         return {'ok': False, 'error': error_msg}
 
 
