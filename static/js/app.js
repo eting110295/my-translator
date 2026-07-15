@@ -164,8 +164,11 @@ class Recognizer {
         };
         rec.onerror = (e) => {
             showDebugLog('SpeechRecognition.onerror fired: ' + e.error);
-            if (e.error === 'no-speech' || e.error === 'aborted') return;
-            if (e.error === 'not-allowed') {
+            if (e.error === 'no-speech') return;
+            this.active = false;
+            if (e.error === 'aborted') {
+                showDebugLog('SpeechRecognition aborted.');
+            } else if (e.error === 'not-allowed') {
                 toast('麥克風權限被拒絕，請允許後重試');
             } else {
                 toast('語音辨識錯誤：' + e.error);
@@ -241,7 +244,10 @@ function fill(sel, val) {
 /* ============================================
    1. 頁面載入時的初始化函式
    ============================================ */
+let appInitialized = false;
 function initApp() {
+    if (appInitialized) return;
+    appInitialized = true;
     console.log('應用初始化開始...');
     
     // 檢查後端健康狀態
@@ -253,6 +259,7 @@ function initApp() {
     // 初始化面對面模式
     initFaceMode();
 }
+
 
 /* ============================================
    2. API 健康檢查函式
@@ -618,19 +625,14 @@ async function convertSimplifiedToTraditional(text) {
 /* ============================================
    5. 頁面載入完成時執行初始化
    ============================================ */
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM 內容已完全載入');
-    initApp();
-});
+// 優先使用 DOMContentLoaded
+document.addEventListener('DOMContentLoaded', initApp);
 
 // 備用：如果 DOMContentLoaded 已經觸發過了
-if (document.readyState === 'loading') {
-    // DOM 還在載入中
-    document.addEventListener('DOMContentLoaded', initApp);
-} else {
-    // DOM 已經載入完了
+if (document.readyState !== 'loading') {
     initApp();
 }
+
 
 /* =========================================================
    Gemini Live 即時模式 (socket 串流)

@@ -1,201 +1,132 @@
 """
-providers.py — 翻譯供應商模組
-使用 Google Gemini API 進行文字翻譯
+翻譯供應商抽象層 (Translation Provider Layer)
+-------------------------------------------------
+統一介面，讓前端可以自由切換：
+  - "openai"：任何「OpenAI 相容」的服務 (OpenAI / Groq / DeepSeek / OpenRouter / Together / 本機 ...)
+  - "gemini"：Google Gemini
+
+前端只送 { provider, base_url, api_key, model, text, source, target }，
+後端在這裡轉發給對應供應商，金鑰不會留在瀏覽器可被第三方讀取的地方 (由 Flask 代理，順便解 CORS)。
 """
 
 import os
-import google.generativeai as genai
-from typing import Dict
+import json
+import re
+import base64
+import requests
+
+DEFAULT_GEMINI_MODEL = "gemini-3.5-flash"
+# 多模態（圖片 / PDF）分析用模型：gemini-3.5-flash 為 GA 版，原生支援影像與 PDF
+DEFAULT_VISION_MODEL = "gemini-3.5-flash"
 
 
-def safe_print(msg: str):
+def build_prompt(source: str, target: str):
+    """產生翻譯用的 system 指令與使用者輸入包裝。"""
+    if source and source.lower() == "auto":
+        system = (
+            "You are a professional real-time translation engine for a two-way conversation. "
+            f"Detect the language of the input. If it is {target}, translate it into the other party's language; "
+            f"otherwise translate it into {target}. "
+            "Output ONLY the translated text — no explanations, no language labels, no quotation marks."
+        )
+    else:
+        system = (
+            f"You are a professional translation engine. Translate the text from {source} into {target}. "
+            "Output ONLY the translated text — no explanations, no language labels, no quotation marks. "
+            "Preserve the tone and meaning; make it sound natural to a native speaker."
+        )
+    return system
+
+
+def translate_gemini(api_key: str, model: str, system: str, text: str) -> str:
+    """呼叫 Google Gemini 的 generate_content。"""
+    from google import genai
+    from google.genai import types
+
+    client = genai.Client(api_key=api_key)
+    resp = client.models.generate_content(
+        model=model or DEFAULT_GEMINI_MODEL,
+        contents=text,
+        config=types.GenerateContentConfig(
+            system_instruction=system,
+            temperature=0.3,
+        ),
+    )
+    return (resp.text or "").strip()
+
+
+def translate_openai(base_url: str, api_key: str, model: str, system: str, text: str, timeout: int = 30) -> str:
+    """呼叫 OpenAI 相容的 /chat/completions 端點。"""
+    if not base_url:
+        base_url = "https://api.openai.com/v1"
+    url = base_url.rstrip("/")
+    if not url.endswith("/chat/completions"):
+        url = url + "/chat/completions"
+
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    # 注意：部分新模型（如 gpt-5.x）只支援預設 temperature，故不傳 temperature 參數
+    payload = {
+        "model": model or "gpt-5.5",
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": text},
+        ],
+    }
+    r = requests.post(url, headers=headers, json=payload, timeout=timeout)
+    r.raise_for_status()
+    data = r.json()
+    return data["choices"][0]["message"]["content"].strip()
+
+
+def translate(data: dict) -> dict:
+    """
+    主入口。data 需含：
+      provider: "openai" | "gemini"
+      text:     要翻譯的文字
+      source:   來源語言 (英文名，或 "auto")
+      target:   目標語言 (英文名)
+      base_url / api_key / model：供應商設定 (openai 必填 key；gemini 可用伺服器 .env 的 key 當後備)
+      回傳 { ok, translation } 或 { ok:false, error }
+    """
+    provider = (data.get("provider") or "gemini").lower()
+    text = (data.get("text") or "").strip()
+    source = data.get("source") or "auto"
+    target = data.get("target") or "English"
+
+    if not text:
+        return {"ok": False, "error": "empty text"}
+
+    system = build_prompt(source, target)
+
     try:
-        print(msg.encode('cp950', errors='replace').decode('cp950'))
-    except Exception:
+        if provider == "openai":
+            api_key = data.get("api_key") or ""
+            if not api_key:
+                return {"ok": False, "error": "OpenAI 相容供應商需要 API Key"}
+            out = translate_openai(
+                base_url=data.get("base_url", ""),
+                api_key=api_key,
+                model=data.get("model", ""),
+                system=system,
+                text=text,
+            )
+        else:  # gemini
+            api_key = data.get("api_key") or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or ""
+            if not api_key:
+                return {"ok": False, "error": "找不到 Gemini API Key（.env 或設定皆無）"}
+            out = translate_gemini(
+                api_key=api_key,
+                model=data.get("model", ""),
+                system=system,
+                text=text,
+            )
+        return {"ok": True, "translation": out, "provider": provider}
+    except requests.HTTPError as e:
+        body = ""
         try:
-            print(msg.encode('ascii', errors='backslashreplace').decode('ascii'))
+            body = e.response.text[:300]
         except Exception:
             pass
-
-
-# ============================================
-# 1. 初始化 Google Gemini API
-# ============================================
-def init_gemini():
-    """
-    初始化 Google Gemini API
-    從環境變數取得 API Key（優先順序：GEMINI_API_KEY > GOOGLE_API_KEY）
-    """
-    # 嘗試多個環境變數名稱
-    api_key = os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY')
-    
-    if not api_key:
-        raise ValueError(
-            '❌ 未找到 API Key！\n'
-            '請設置環境變數：GEMINI_API_KEY 或 GOOGLE_API_KEY\n'
-            '如何設置？\n'
-            '  Windows: set GEMINI_API_KEY=your_key_here\n'
-            '  Mac/Linux: export GEMINI_API_KEY=your_key_here\n'
-            '或在 .env 檔案中添加：GEMINI_API_KEY=your_key_here'
-        )
-    
-    genai.configure(api_key=api_key)
-
-
-# ============================================
-# 2. 翻譯函式（核心邏輯）
-# ============================================
-def translate(data: Dict) -> Dict:
-    """
-    使用 Google Gemini 翻譯文字
-    
-    參數：
-        data (dict): 包含以下內容
-            - text (str): 要翻譯的文字
-            - source (str): 源語言代碼 (如 'zh-TW', 'en')
-            - target (str): 目標語言代碼 (如 'en', 'ja')
-    
-    回傳：
-        dict: 
-            成功: {'ok': True, 'translation': '翻譯結果'}
-            失敗: {'ok': False, 'error': '錯誤訊息'}
-    """
-    
-    # -------- 第1步：驗證輸入 --------
-    try:
-        # 提取數據
-        text = data.get('text', '').strip()
-        source = data.get('source', '').strip()
-        target = data.get('target', '').strip()
-        
-        # 檢查必填欄位
-        if not text:
-            return {'ok': False, 'error': '文字不能為空'}
-        if not target:
-            return {'ok': False, 'error': '目標語言代碼不能為空'}
-        
-        safe_print(f'[INFO] 翻譯請求：{source or "自動檢測"} -> {target}')
-        safe_print(f'   文字：{text[:50]}{"..." if len(text) > 50 else ""}')
-    
+        return {"ok": False, "error": f"HTTP {e.response.status_code if e.response else '?'}: {body}"}
     except Exception as e:
-        return {'ok': False, 'error': f'參數驗證錯誤：{str(e)}'}
-    
-    # -------- 第2步：構建提示詞 --------
-    # 根據源語言決定提示詞
-    if source and source != 'auto':
-        prompt = f"""翻譯以下文字從{_lang_name(source)}到{_lang_name(target)}：
-
-"{text}"
-
-記住：只輸出翻譯後的文字，不要任何解釋或額外文字。"""
-    else:
-        # 源語言不明確或自動檢測
-        prompt = f"""翻譯以下文字到{_lang_name(target)}：
-
-"{text}"
-
-記住：只輸出翻譯後的文字，不要任何解釋或額外文字。"""
-    
-    # -------- 第3步：呼叫 Gemini API --------
-    try:
-        # 初始化 API（如果尚未初始化）
-        try:
-            init_gemini()
-        except ValueError:
-            # API Key 已設置，直接使用
-            pass
-        
-        # 建立模型實例
-        model = genai.GenerativeModel(
-            model_name='gemini-3.1-flash-lite',
-            system_instruction='你是一個專業翻譯助手。只輸出翻譯結果，不要任何解釋。'
-        )
-        
-        # 發送請求
-        response = model.generate_content(prompt)
-        
-        # 提取翻譯結果
-        translation = response.text.strip()
-        
-        safe_print(f'[SUCCESS] 翻譯成功：{translation}')
-        return {
-            'ok': True,
-            'translation': translation
-        }
-    
-    except ValueError as e:
-        # API Key 未設置
-        error_msg = str(e)
-        safe_print(f'[ERROR] {error_msg}')
-        return {'ok': False, 'error': error_msg}
-    
-    except Exception as e:
-        # 其他未預期的錯誤
-        error_msg = f'翻譯過程發生錯誤：{str(e)}'
-        safe_print(f'[ERROR] {error_msg}')
-        return {'ok': False, 'error': error_msg}
-
-
-# ============================================
-# 3. 輔助函式：語言代碼轉為語言名稱
-# ============================================
-def _lang_name(code: str) -> str:
-    """
-    將語言代碼轉為可讀的語言名稱
-    
-    參數：
-        code (str): 語言代碼 (如 'zh-TW', 'en')
-    
-    回傳：
-        str: 語言名稱
-    """
-    lang_map = {
-        'zh-TW': '繁體中文',
-        'zh-CN': '簡體中文',
-        'zh': '中文',
-        'en': '英文',
-        'ja': '日文',
-        'ko': '韓文',
-        'vi': '越南文',
-        'de': '德文',
-        'fr': '法文',
-        'es': '西班牙文',
-        'th': '泰文',
-        'tr': '土耳其文',
-    }
-    return lang_map.get(code, code)
-
-
-# ============================================
-# 4. 測試程式（執行此檔案時會運行）
-# ============================================
-if __name__ == '__main__':
-    print('[TEST] 測試 providers.py\n')
-    
-    # 測試案例 1：中文 → 英文
-    print('--- 測試 1：中文 → 英文 ---')
-    result = translate({
-        'text': '你好，我叫小明',
-        'source': 'zh-TW',
-        'target': 'en'
-    })
-    print(f'結果：{result}\n')
-    
-    # 測試案例 2：英文 → 日文
-    print('--- 測試 2：英文 → 日文 ---')
-    result = translate({
-        'text': 'Hello, my name is John',
-        'source': 'en',
-        'target': 'ja'
-    })
-    print(f'結果：{result}\n')
-    
-    # 測試案例 3：越南文 → 中文
-    print('--- 測試 3：越南文 → 中文 ---')
-    result = translate({
-        'text': 'Xin chào, tôi là người Việt',
-        'source': 'vi',
-        'target': 'zh-TW'
-    })
-    print(f'結果：{result}')
-
+        return {"ok": False, "error": f"{type(e).__name__}: {e}"}

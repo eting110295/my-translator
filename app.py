@@ -24,7 +24,8 @@ app = Flask(__name__,
 # 初始化 SocketIO 與 Gemini Live 設定
 socketio = SocketIO(app, cors_allowed_origins="*")
 active_sessions = {}
-LIVE_MODEL = "gemini-2.0-flash-exp"
+LIVE_MODEL = "gemini-3.5-live-translate-preview"
+
 
 # 設定日誌
 logging.basicConfig(level=logging.INFO)
@@ -106,7 +107,7 @@ def api_tts():
                 inline = getattr(part, 'inline_data', None)
                 if inline is not None and inline.data:
                     return Response(inline.data, mimetype='application/octet-stream')  # 24kHz 16-bit PCM
-            last_err = 'model returned text instead of audio'
+                last_err = 'model returned text instead of audio'
         except Exception as e:
             last_err = str(e)
     app.logger.error(f"TTS failed after retries: {last_err}")
