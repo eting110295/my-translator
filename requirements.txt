@@ -5,4 +5,4 @@ google-genai>=0.3.0
 google-generativeai>=0.8.0
 flask-socketio
 simple-websocket
-
+eventlet>=0.33.0
