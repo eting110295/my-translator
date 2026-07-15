@@ -49,13 +49,7 @@ const BCP = {
 };
 
 /* Web Speech API 設定 */
-let recognition;
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-if (SpeechRecognition) {
-    recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-}
 
 /* Helper Functions for Face-to-Face Mode */
 const $ = (id) => document.getElementById(id);
@@ -105,14 +99,15 @@ class Recognizer {
             toast('此瀏覽器不支援語音辨識，請改用文字輸入'); 
             return; 
         }
-        // 確保中止全域單人語音辨識，避免設備衝突
-        if (recognition) {
-            try { recognition.abort(); } catch(e){}
+        // 確保中止其他可能正在聽寫的辨識器，避免設備衝突
+        if (typeof sRecognizer !== 'undefined' && sRecognizer && this !== sRecognizer && sRecognizer.active) {
+            try { sRecognizer.stop(); } catch(e){}
         }
-        // 確保中止另一面板的辨識器
-        if (typeof recTop !== 'undefined' && typeof recBottom !== 'undefined') {
-            if (this === recTop && recBottom && recBottom.active) recBottom.stop();
-            if (this === recBottom && recTop && recTop.active) recTop.stop();
+        if (typeof recTop !== 'undefined' && recTop && this !== recTop && recTop.active) {
+            try { recTop.stop(); } catch(e){}
+        }
+        if (typeof recBottom !== 'undefined' && recBottom && this !== recBottom && recBottom.active) {
+            try { recBottom.stop(); } catch(e){}
         }
 
         if (this.active) { 
@@ -251,124 +246,67 @@ async function translate(text, source, target) {
 }
 
 /* ============================================
-   語音辨識函式
+   單人模式語音辨識初始化
    ============================================ */
-function startListening() {
-    if (!recognition) {
-        alert('您的瀏覽器不支持語音識別');
-        return;
-    }
-    // 確保中止面對面辨識器，避免設備衝突
-    if (typeof recTop !== 'undefined' && recTop && recTop.active) recTop.stop();
-    if (typeof recBottom !== 'undefined' && recBottom && recBottom.active) recBottom.stop();
-    
-    // 如果已經在錄音，點擊則停止
-    const micBtn = document.getElementById('micBtn');
-    if (micBtn && micBtn.classList.contains('recording')) {
-        recognition.stop();
-        return;
-    }
-    
-    // 自動設定語言
-    const langCode = langA.value;
-    const langMap = {
-        'zh-TW': 'zh-TW',
-        'en': 'en-US',
-        'ja': 'ja-JP',
-        'ko': 'ko-KR',
-        'vi': 'vi-VN',
-        'de': 'de-DE'
-    };
-    recognition.lang = langMap[langCode] || 'en-US';
-    
-    recognition.start();
-}
+let sRecognizer = null;
 
-function setupSpeechRecognition() {
-    if (!recognition) return;
-    
-    const inputText = document.getElementById('inputText');
+function initSingleRecognizer() {
     const micBtn = document.getElementById('micBtn');
+    if (!micBtn) return;
     
-    recognition.onstart = () => {
-        console.log('🎤 開始聽寫...');
-        if (micBtn) {
-            micBtn.classList.add('recording');
-            micBtn.style.opacity = '0.6';
+    sRecognizer = new Recognizer({
+        bcp: BCP[langA.value] || 'zh-TW',
+        onInterim: (t) => {
+            const inputText = document.getElementById('inputText');
+            if (inputText) {
+                inputText.value = t;
+                const charCount = document.getElementById('charCount');
+                if (charCount) charCount.textContent = `${t.length}/500`;
+            }
+        },
+        onDone: async (t) => {
+            const text = t.trim();
+            if (!text) return;
+            
+            result.textContent = '翻譯中…';
+            const ttsBtn = document.getElementById('ttsBtn');
+            if (ttsBtn) ttsBtn.style.display = 'none';
+            try {
+                // 自動簡轉繁
+                let finalText = text;
+                if (langA.value === 'zh-TW') {
+                    finalText = await convertSimplifiedToTraditional(text);
+                    const inputText = document.getElementById('inputText');
+                    if (inputText) inputText.value = finalText;
+                }
+                
+                const out = await translate(finalText, NAME[langA.value], NAME[langB.value]);
+                result.textContent = out;
+                
+                // 語音朗讀與按鈕連動
+                if (ttsBtn) {
+                    ttsBtn.style.display = 'flex';
+                    ttsBtn.innerHTML = '■ 停止';
+                    speak(out, BCP[langB.value] || 'en-US', false, () => {
+                        ttsBtn.innerHTML = '🔊 朗讀';
+                    });
+                } else {
+                    speak(out, BCP[langB.value] || 'en-US');
+                }
+            } catch (e) {
+                result.textContent = '（翻譯失敗）';
+                alert(e.message);
+            }
+        },
+        onState: (on) => {
+            micBtn.classList.toggle('recording', on);
+            micBtn.style.opacity = on ? '0.6' : '1';
             const micLabel = micBtn.querySelector('.mic-label');
             if (micLabel) {
-                micLabel.textContent = '正在說話...（再點一下停止）';
+                micLabel.textContent = on ? '正在說話...（再點一下停止）' : '點一下開始說話';
             }
         }
-    };
-    
-    recognition.onresult = (event) => {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            const current = event.results[i][0].transcript;
-            transcript += current;
-            if (event.results[i].isFinal) {
-                console.log('✓ 最終結果:', current);
-            }
-        }
-        if (inputText && transcript) {
-            inputText.value = transcript;
-            const charCount = document.getElementById('charCount');
-            if (charCount) {
-                charCount.textContent = inputText.value.length + '/500';
-            }
-        }
-    };
-    
-    recognition.onerror = (event) => {
-        console.error('❌ 語音識別錯誤:', event.error);
-        alert('聽寫失敗：' + event.error);
-    };
-    
-    recognition.onend = async () => {
-        console.log('🎤 聽寫結束');
-        if (micBtn) {
-            micBtn.classList.remove('recording');
-            micBtn.style.opacity = '1';
-            const micLabel = micBtn.querySelector('.mic-label');
-            if (micLabel) {
-                micLabel.textContent = '點一下開始說話';
-            }
-        }
-        
-        const text = inputText.value.trim();
-        if (!text) return;
-        
-        result.textContent = '翻譯中…';
-        const ttsBtn = document.getElementById('ttsBtn');
-        if (ttsBtn) ttsBtn.style.display = 'none';
-        
-        try {
-            // 自動簡轉繁
-            let finalText = text;
-            if (langA.value === 'zh-TW') {
-                finalText = await convertSimplifiedToTraditional(text);
-                inputText.value = finalText;
-            }
-            
-            const out = await translate(finalText, NAME[langA.value], NAME[langB.value]);
-            result.textContent = out;
-            
-            // 顯示朗讀按鈕並開始自動播放
-            if (ttsBtn) {
-                ttsBtn.style.display = 'flex';
-                ttsBtn.innerHTML = '■ 停止';
-                speak(out, BCP[langB.value] || 'en-US', false, () => {
-                    ttsBtn.innerHTML = '🔊 朗讀';
-                });
-            } else {
-                speak(out, BCP[langB.value] || 'en-US');
-            }
-        } catch (e) {
-            result.textContent = '（翻譯失敗）';
-            alert(e.message);
-        }
-    };
+    });
 }
 
 /* ============================================
@@ -516,9 +454,6 @@ function setupEventListeners() {
     // 麥克風按鈕 - 語音輸入
     const micBtn = document.getElementById('micBtn');
     if (micBtn && SpeechRecognition) {
-        // 初始化語音識別
-        setupSpeechRecognition();
-        
         // 點擊麥克風按鈕開始聽寫
         micBtn.addEventListener('click', () => {
             ensureAudioUnlocked(); // 解鎖音訊
@@ -526,7 +461,10 @@ function setupEventListeners() {
             if (engine === 'live') {
                 toggleLive();
             } else {
-                startListening();
+                if (sRecognizer) {
+                    sRecognizer.bcp = BCP[langA.value] || 'zh-TW';
+                    sRecognizer.start();
+                }
             }
         });
     } else if (micBtn && !SpeechRecognition) {
@@ -847,8 +785,8 @@ if (modeBtn) {
         if (recTop && recTop.active) recTop.stop();
         if (recBottom && recBottom.active) recBottom.stop();
         // 確保中斷單人語音辨識
-        if (recognition) {
-            try { recognition.abort(); } catch(e){}
+        if (sRecognizer && sRecognizer.active) {
+            try { sRecognizer.stop(); } catch(e){}
         }
         
         mode = mode === 'single' ? 'face' : 'single';
