@@ -510,6 +510,7 @@ async function startLive() {
                 let s = Math.max(-1, Math.min(1, input[Math.floor(i * step)] || 0));
                 pcm[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
             }
+            if(liveOn) console.log('送出音訊 bytes:', pcm.buffer.byteLength);
             socket.emit('audio_in', pcm.buffer);
         };
         socket.emit('start_session', {
