@@ -1,0 +1,255 @@
+﻿/* ============================================
+   CSS 骨架：深紫色漸層背景 + 金色重點
+   ============================================ */
+
+:root {
+    /* 色系變數 */
+    --primary-dark: #1a0f2e;     /* 深紫 */
+    --primary: #2d1b4e;          /* 主紫 */
+    --primary-light: #3f2b5f;    /* 淺紫 */
+    --accent: #d4af37;           /* 金色 */
+    --accent-light: #f0d758;     /* 淺金 */
+    --text-primary: #ffffff;     /* 主文字 */
+    --text-secondary: #b8a8d8;   /* 次文字 */
+    --border: rgba(212, 175, 55, 0.3); /* 金色邊框 */
+    --bg-card: rgba(255, 255, 255, 0.05); /* 卡片背景 */
+}
+
+/* 全局重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', sans-serif;
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary) 50%, var(--primary-light));
+    color: var(--text-primary);
+    overflow-x: hidden;
+}
+
+/* 容器 */
+.container {
+    max-width: 640px;
+    height: 100vh;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    background: inherit;
+}
+
+/* ============ 頂部標題列 ============ */
+.topbar {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.topbar h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.topbar h1::first-letter {
+    color: var(--accent);
+}
+
+/* ============ 主內容區 ============ */
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* ============ 語言選擇列 ============ */
+.lang-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.lang-select {
+    flex: 1;
+    padding: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.lang-select:hover {
+    background: rgba(212, 175, 55, 0.08);
+    border-color: var(--accent);
+}
+
+.lang-select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+}
+
+/* 對調按鈕 */
+.swap-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    color: var(--primary-dark);
+    border: none;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.swap-btn:hover {
+    transform: scale(1.1) rotate(180deg);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+}
+
+.swap-btn:active {
+    transform: scale(0.95);
+}
+
+/* ============ 翻譯結果框 ============ */
+.result-box {
+    flex: 1;
+    min-height: 120px;
+    padding: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow-y: auto;
+    line-height: 1.6;
+    font-size: 1.1rem;
+}
+
+.result-box .placeholder {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* ============ 麥克風按鈕 ============ */
+.mic-btn {
+    padding: 16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    color: var(--primary-dark);
+    border: none;
+    border-radius: 16px;
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.mic-icon {
+    font-size: 1.3rem;
+}
+
+.mic-btn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 16px rgba(212, 175, 55, 0.4);
+}
+
+.mic-btn:active {
+    transform: scale(0.98);
+}
+
+.mic-btn.recording {
+    background: linear-gradient(135deg, #ff6b6b, #ff8787);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7); }
+    50% { box-shadow: 0 0 0 12px rgba(255, 107, 107, 0); }
+}
+
+/* ============ 文字輸入區 ============ */
+.text-input-area {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.text-input {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 1rem;
+    resize: vertical;
+    outline: none;
+}
+
+.text-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.input-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4px;
+}
+
+.char-count {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.translate-btn {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    color: var(--primary-dark);
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.translate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+}
+
+.translate-btn:active {
+    transform: translateY(0);
+}
+
+/* ============ 響應式設計 ============ */
+@media (max-height: 700px) {
+    .content {
+        gap: 12px;
+        padding: 12px;
+    }
+    
+    .result-box {
+        min-height: 80px;
+    }
+}

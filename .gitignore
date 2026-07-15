@@ -1,0 +1,28 @@
+# Python environment files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# dotenv file containing secrets
+.env
+
+# Virtual environment folders
+venv/
+.env/
+ENV/
+*.env
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python packaging
+dist/
+build/
+*.egg-info/
+
+# OS files
+.DS_Store
+Thumbs.db
