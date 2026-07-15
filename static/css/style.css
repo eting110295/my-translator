@@ -283,3 +283,18 @@ html, body {
         min-height: 80px;
     }
 }
+
+.status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background-color: #ff4d4d;
+    border-radius: 50%;
+    margin-left: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.status-dot.connected {
+    background-color: #2ecc71;
+    box-shadow: 0 0 8px #2ecc71;
+}

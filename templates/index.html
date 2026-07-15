@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sweety 即時翻譯</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body>
     <div class="container">
         <!-- 頂部標題列 -->
         <header class="topbar">
-            <h1>Sweety 即時翻譯</h1>
+            <h1>Sweety 即時翻譯 <span id="statusDot" class="status-dot"></span></h1>
         </header>
 
         <!-- 主內容區 -->
@@ -32,6 +33,16 @@
                     <option value="ja">日本語</option>
                     <option value="ko">한국어</option>
                 </select>
+            </div>
+
+            <!-- 模式選擇列 -->
+            <div class="engine-bar" style="margin-bottom: 15px; display: flex; justify-content: center; gap: 20px; font-weight: 700; color: var(--text-secondary);">
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <input type="radio" name="engine" value="sentence" checked style="accent-color: var(--accent);"> 逐句翻譯
+                </label>
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <input type="radio" name="engine" value="live" style="accent-color: var(--accent);"> 即時模式
+                </label>
             </div>
 
             <!-- 翻譯結果框 -->

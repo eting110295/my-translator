@@ -311,7 +311,12 @@ function setupEventListeners() {
         // 點擊麥克風按鈕開始聽寫
         micBtn.addEventListener('click', () => {
             ensureAudioUnlocked(); // 解鎖音訊
-            startListening();
+            const engine = document.querySelector('input[name=engine]:checked')?.value || 'sentence';
+            if (engine === 'live') {
+                toggleLive();
+            } else {
+                startListening();
+            }
         });
     } else if (micBtn && !SpeechRecognition) {
         micBtn.style.opacity = '0.5';
@@ -435,4 +440,112 @@ if (document.readyState === 'loading') {
 } else {
     // DOM 已經載入完了
     initApp();
+}
+
+/* =========================================================
+   Gemini Live 即時模式 (socket 串流)
+   ========================================================= */
+let socket = null;
+try {
+    if (typeof io === 'function') {
+        socket = io({ transports: ['websocket', 'polling'] });
+        socket.on('connect', () => {
+            const statusDot = document.getElementById('statusDot');
+            if (statusDot) statusDot.classList.add('connected');
+        });
+        socket.on('disconnect', () => {
+            const statusDot = document.getElementById('statusDot');
+            if (statusDot) statusDot.classList.remove('connected');
+            if (liveOn) stopLive();
+        });
+        socket.on('error', (d) => toast('伺服器：' + (d.msg || 'error')));
+    } else {
+        console.warn('socket.io 未載入，Gemini Live 即時模式停用');
+    }
+} catch (e) { console.warn('socket.io init 失敗', e); }
+
+let liveOn = false, audioCtx, liveProcessor, liveInput, liveStream;
+let livePending = '';
+if (socket) {
+    socket.on('text_response', (d) => {
+        if (d.text) {
+            livePending += d.text;
+            result.textContent = livePending;
+            result.classList.remove('placeholder');
+        }
+    });
+    socket.on('turn_complete', () => {
+        // 即時模式由 Gemini 直接吐語音（audio_response 播放），不需再用瀏覽器 TTS，避免雙重朗讀
+        livePending = '';
+    });
+    socket.on('audio_response', (data) => {
+        playLiveAudio(data);
+    });
+}
+
+function toast(msg) {
+    console.log('Toast:', msg);
+}
+
+async function toggleLive() { liveOn ? stopLive() : startLive(); }
+
+async function startLive() {
+    if (!socket) { toast('即時模式需要伺服器連線 (socket.io 未載入)'); return; }
+    try {
+        liveStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        liveInput = audioCtx.createMediaStreamSource(liveStream);
+        liveProcessor = audioCtx.createScriptProcessor(4096, 1, 1);
+        liveInput.connect(liveProcessor);
+        liveProcessor.connect(audioCtx.destination);
+        const targetRate = 16000;
+        liveProcessor.onaudioprocess = (e) => {
+            if (!liveOn) return;
+            const input = e.inputBuffer.getChannelData(0);
+            const rate = audioCtx.sampleRate;
+            const step = rate / targetRate;
+            const len = Math.floor(input.length / step);
+            const pcm = new Int16Array(len);
+            for (let i = 0; i < len; i++) {
+                let s = Math.max(-1, Math.min(1, input[Math.floor(i * step)] || 0));
+                pcm[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+            }
+            socket.emit('audio_in', pcm.buffer);
+        };
+        socket.emit('start_session', {
+            langA: NAME[langA.value] || 'Traditional Chinese',
+            langB: NAME[langB.value] || 'English',
+            gemini_key: cfg.geminikey || '',
+        });
+        liveOn = true;
+        toggleMic(document.getElementById('micBtn'), true);
+        result.textContent = '即時聆聽中…';
+        result.classList.add('placeholder');
+    } catch (e) {
+        toast('無法啟動麥克風：' + e.name);
+        console.error(e);
+    }
+}
+
+function stopLive() {
+    liveOn = false;
+    toggleMic(document.getElementById('micBtn'), false);
+    if (liveProcessor) { liveProcessor.disconnect(); liveProcessor = null; }
+    if (liveInput) { liveInput.disconnect(); liveInput = null; }
+    if (liveStream) { liveStream.getTracks().forEach(t => t.stop()); liveStream = null; }
+    if (socket) socket.emit('stop_session');
+}
+
+function toggleMic(btn, on) {
+    if (!btn) return;
+    btn.classList.toggle('recording', on);
+    if (on) {
+        btn.style.opacity = '0.6';
+    } else {
+        btn.style.opacity = '1';
+    }
+    const lbl = btn.querySelector('.mic-label');
+    if (lbl) {
+        lbl.textContent = on ? '即時模式：聆聽中...（再點一下停止）' : '點一下開始說話';
+    }
 }
