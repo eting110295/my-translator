@@ -480,3 +480,111 @@ html, body {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
 }
+
+/* ============ 面對面模式 ============ */
+.hidden {
+    display: none !important;
+}
+
+#faceView {
+    padding: 0;
+    height: calc(100vh - 120px); /* 扣除頂部標題與底部的適當間距 */
+    display: flex;
+    flex-direction: column;
+}
+
+.face-panel {
+    flex: 1;
+    display: flex;
+    padding: 20px;
+    overflow: hidden;
+}
+
+.face-panel.top {
+    transform: rotate(180deg); /* 翻轉 180° 給對面看 */
+    background: rgba(212, 175, 55, 0.04);
+}
+
+.face-panel.bottom {
+    background: rgba(255, 255, 255, 0.01);
+}
+
+.face-inner {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.face-result {
+    font-size: 1.3rem !important;
+    flex: 1;
+    overflow-y: auto;
+    margin: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.face-mic {
+    padding: 14px !important;
+    font-size: 1rem !important;
+    background: linear-gradient(135deg, var(--primary-light), var(--primary)) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 50px !important;
+    color: var(--text-primary) !important;
+    cursor: pointer;
+    transition: all 0.2s ease !important;
+    font-weight: 700;
+}
+
+.face-mic:hover {
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.25) !important;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light)) !important;
+    color: #1a0f2e !important;
+}
+
+.face-mic.listening {
+    background: #ff4d4d !important;
+    box-shadow: 0 0 15px rgba(255, 77, 77, 0.5) !important;
+    color: white !important;
+    border-color: #ff4d4d !important;
+}
+
+.face-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 0;
+    background: rgba(0, 0, 0, .3);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.mode-btn {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--accent);
+    transition: all 0.3s ease;
+    outline: none;
+    user-select: none;
+}
+
+.mode-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--accent-light);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+}

@@ -6,69 +6,102 @@
     <title>Sweety 即時翻譯</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <!-- OpenCC：手機語音辨識常把國語轉成簡體，載入後把辨識結果轉回繁體 -->
+    <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js"></script>
 </head>
 <body>
     <div class="container">
         <!-- 頂部標題列 -->
         <header class="topbar">
+            <button id="modeBtn" class="mode-btn" title="切換模式">👤 單人</button>
             <h1>Sweety 即時翻譯 <span id="statusDot" class="status-dot"></span></h1>
             <button id="settingsBtn" class="settings-btn" title="設定">⚙️</button>
         </header>
 
         <!-- 主內容區 -->
         <main class="content">
-            <!-- 語言選擇列 -->
-            <div class="lang-bar">
-                <select id="langA" class="lang-select">
-                    <option value="zh-TW">繁體中文</option>
-                    <option value="en">English</option>
-                    <option value="ja">日本語</option>
-                    <option value="ko">한국어</option>
-                </select>
-                
-                <button id="swap" class="swap-btn">⇄</button>
-                
-                <select id="langB" class="lang-select">
-                    <option value="en">English</option>
-                    <option value="zh-TW">繁體中文</option>
-                    <option value="ja">日本語</option>
-                    <option value="ko">한국어</option>
-                </select>
-            </div>
-
-            <!-- 模式選擇列 -->
-            <div class="engine-bar" style="margin-bottom: 15px; display: flex; justify-content: center; gap: 20px; font-weight: 700; color: var(--text-secondary);">
-                <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                    <input type="radio" name="engine" value="sentence" checked style="accent-color: var(--accent);"> 逐句翻譯
-                </label>
-                <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                    <input type="radio" name="engine" value="live" style="accent-color: var(--accent);"> 即時模式
-                </label>
-            </div>
-
-            <!-- 翻譯結果框 -->
-            <div class="result-box">
-                <p id="result" class="placeholder">翻譯結果會顯示在這裡…</p>
-                <button id="ttsBtn" class="tts-btn" style="display: none;">🔊 朗讀</button>
-            </div>
-
-            <!-- 麥克風按鈕 -->
-            <button id="micBtn" class="mic-btn">
-                <span class="mic-icon">🎤</span>
-                <span class="mic-label">點一下開始說話</span>
-            </button>
-
-            <!-- 文字輸入框 -->
-            <div class="text-input-area">
-                <textarea id="inputText" 
-                          class="text-input" 
-                          placeholder="或直接輸入要翻譯的文字…" 
-                          maxlength="500"></textarea>
-                <div class="input-footer">
-                    <span id="charCount" class="char-count">0/500</span>
-                    <button id="send" class="translate-btn">翻譯 ➤</button>
+            <!-- 單人模式區 -->
+            <section id="singleView" class="view">
+                <!-- 語言選擇列 -->
+                <div class="lang-bar">
+                    <select id="langA" class="lang-select">
+                        <option value="zh-TW">繁體中文</option>
+                        <option value="en">English</option>
+                        <option value="ja">日本語</option>
+                        <option value="ko">한국어</option>
+                    </select>
+                    
+                    <button id="swap" class="swap-btn">⇄</button>
+                    
+                    <select id="langB" class="lang-select">
+                        <option value="en">English</option>
+                        <option value="zh-TW">繁體中文</option>
+                        <option value="ja">日本語</option>
+                        <option value="ko">한국어</option>
+                    </select>
                 </div>
-            </div>
+
+                <!-- 模式選擇列 -->
+                <div class="engine-bar" style="margin-bottom: 15px; display: flex; justify-content: center; gap: 20px; font-weight: 700; color: var(--text-secondary);">
+                    <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                        <input type="radio" name="engine" value="sentence" checked style="accent-color: var(--accent);"> 逐句翻譯
+                    </label>
+                    <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                        <input type="radio" name="engine" value="live" style="accent-color: var(--accent);"> 即時模式
+                    </label>
+                </div>
+
+                <!-- 翻譯結果框 -->
+                <div class="result-box">
+                    <p id="result" class="placeholder">翻譯結果會顯示在這裡…</p>
+                    <button id="ttsBtn" class="tts-btn" style="display: none;">🔊 朗讀</button>
+                </div>
+
+                <!-- 麥克風按鈕 -->
+                <button id="micBtn" class="mic-btn">
+                    <span class="mic-icon">🎤</span>
+                    <span class="mic-label">點一下開始說話</span>
+                </button>
+
+                <!-- 文字輸入框 -->
+                <div class="text-input-area">
+                    <textarea id="inputText" 
+                              class="text-input" 
+                              placeholder="或直接輸入要翻譯的文字…" 
+                              maxlength="500"></textarea>
+                    <div class="input-footer">
+                        <span id="charCount" class="char-count">0/500</span>
+                        <button id="send" class="translate-btn">翻譯 ➤</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 面對面模式區 -->
+            <section id="faceView" class="view hidden">
+                <!-- 上半：翻轉 180°，給對面的人看 -->
+                <div class="face-panel top" id="face_top">
+                    <div class="face-inner">
+                        <select class="lang-select" id="f_langTop"></select>
+                        <div class="result-box face-result" id="f_resultTop">
+                            <span class="placeholder">對方語言的翻譯會顯示在這裡…</span>
+                        </div>
+                        <button class="mic-btn face-mic" id="f_micTop"><span class="mic-ico">🎤</span> 說話</button>
+                    </div>
+                </div>
+
+                <div class="face-divider"><span>面對面 · 手機平放桌上</span></div>
+
+                <!-- 下半：正常方向，給你看 -->
+                <div class="face-panel bottom" id="face_bottom">
+                    <div class="face-inner">
+                        <select class="lang-select" id="f_langBottom"></select>
+                        <div class="result-box face-result" id="f_resultBottom">
+                            <span class="placeholder">你的語言的翻譯會顯示在這裡…</span>
+                        </div>
+                        <button class="mic-btn face-mic" id="f_micBottom"><span class="mic-ico">🎤</span> 說話</button>
+                    </div>
+                </div>
+            </section>
         </main>
     <!-- 設定彈窗 -->
     <div id="settingsModal" class="modal" style="display: none;">

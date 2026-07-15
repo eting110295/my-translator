@@ -43,6 +43,113 @@ if (SpeechRecognition) {
     recognition.interimResults = true;
 }
 
+/* Helper Functions for Face-to-Face Mode */
+const $ = (id) => document.getElementById(id);
+const byId = (id) => ({ id, bcp: BCP[id] || 'en-US' });
+const setResult = (el, text, isPlaceholder = false) => {
+    if (!el) return;
+    el.textContent = text;
+    if (isPlaceholder) {
+        el.classList.add('placeholder');
+    } else {
+        el.classList.remove('placeholder');
+    }
+};
+const pushHistory = (srcText, transText) => {
+    console.log('History:', srcText, '->', transText);
+};
+
+// OpenCC 簡轉繁轉換器
+let _s2t = null, _s2tReady = false;
+function toTraditional(text) {
+    if (!text) return text;
+    try {
+        if (!_s2tReady) {
+            _s2tReady = true;
+            if (window.OpenCC) _s2t = window.OpenCC.Converter({ from: 'cn', to: 'tw' });
+        }
+        return _s2t ? _s2t(text) : text;
+    } catch (e) { return text; }
+}
+function convForBcp(bcp, text) {
+    return (bcp === 'zh-TW' || bcp === 'zh-HK') ? toTraditional(text) : text;
+}
+
+// 語音辨識器包裝類別 (供單人與面對面使用)
+class Recognizer {
+    constructor({ bcp, onInterim, onDone, onState }) {
+        this.bcp = bcp; 
+        this.onInterim = onInterim; 
+        this.onDone = onDone; 
+        this.onState = onState;
+        this.active = false; 
+        this.rec = null; 
+        this.buffer = '';
+    }
+    start() {
+        if (!SpeechRecognition) { 
+            toast('此瀏覽器不支援語音辨識，請改用文字輸入'); 
+            return; 
+        }
+        if (this.active) { 
+            this.stop(); 
+            return; 
+        }
+        this.buffer = '';
+        const rec = new SpeechRecognition();
+        rec.lang = this.bcp;
+        rec.interimResults = true;
+        rec.continuous = true;
+        rec.onresult = (e) => {
+            let interim = '';
+            for (let i = e.resultIndex; i < e.results.length; i++) {
+                const r = e.results[i];
+                if (r.isFinal) {
+                    this.buffer += convForBcp(this.bcp, r[0].transcript);
+                } else {
+                    interim += convForBcp(this.bcp, r[0].transcript);
+                }
+            }
+            const shown = (this.buffer + interim).trim();
+            if (shown) this.onInterim?.(shown);
+        };
+        rec.onerror = (e) => {
+            if (e.error === 'no-speech' || e.error === 'aborted') return;
+            if (e.error === 'not-allowed') {
+                toast('麥克風權限被拒絕，請允許後重試');
+            } else {
+                toast('語音辨識錯誤：' + e.error);
+            }
+        };
+        rec.onend = () => {
+            if (this.active) { 
+                try { rec.start(); } catch {} 
+            } else {
+                this.onState?.(false);
+            }
+        };
+        this.rec = rec;
+        this.active = true;
+        try { 
+            rec.start(); 
+            this.onState?.(true); 
+        } catch (e) { 
+            toast('無法啟動麥克風'); 
+            this.active = false; 
+        }
+    }
+    stop() {
+        this.active = false;
+        if (this.rec) { 
+            try { this.rec.stop(); } catch {} 
+        }
+        this.onState?.(false);
+        const text = this.buffer.trim();
+        this.buffer = '';
+        if (text) this.onDone?.(text);
+    }
+}
+
 /* ============================================
    語言清單
    ============================================ */
@@ -82,6 +189,9 @@ function initApp() {
     
     // 初始化事件監聽
     setupEventListeners();
+
+    // 初始化面對面模式
+    initFaceMode();
 }
 
 /* ============================================
@@ -634,4 +744,85 @@ function toggleMic(btn, on) {
     if (lbl) {
         lbl.textContent = on ? '即時模式：聆聽中...（再點一下停止）' : '點一下開始說話';
     }
+}
+
+/* =========================================================
+   面對面模式
+   ========================================================= */
+function makeFaceSide(langSelId, resultBoxId, micBtnId, getTargetId) {
+    const box = $(resultBoxId), btn = $(micBtnId);
+    if (!box || !btn) return null;
+    const rec = new Recognizer({
+        bcp: BCP[$(langSelId).value] || 'en-US',
+        onInterim: (t) => setResult(box, t, true),
+        onDone: async (t) => {
+            // 講完按停才會進來：麥克風已停，整段一次翻譯
+            const src = $(langSelId).value, tgt = getTargetId();
+            try {
+                setResult(box, '翻譯中…', true);
+                const out = await translate(t, NAME[src], NAME[tgt]);
+                // 顯示在「對面那一側」的框
+                const otherBox = (resultBoxId === 'f_resultBottom') ? $('f_resultTop') : $('f_resultBottom');
+                setResult(otherBox, out);
+                ensureAudioUnlocked();
+                speak(out, BCP[tgt] || 'en-US', true);
+                pushHistory(t, out);
+            } catch (e) { toast(e.message); }
+        },
+        onState: (on) => {
+            btn.classList.toggle('listening', on);
+            btn.innerHTML = on ? '🔴 停止' : '🎤 說話';
+        },
+    });
+    btn.addEventListener('click', () => { 
+        ensureAudioUnlocked();
+        rec.bcp = BCP[$(langSelId).value] || 'en-US'; 
+        rec.start(); 
+    });
+    return rec;
+}
+
+// 宣告面對面對話物件
+let recTop = null, recBottom = null;
+
+function initFaceMode() {
+    const fLangTop = $('f_langTop');
+    const fLangBottom = $('f_langBottom');
+    
+    if (fLangTop) fill(fLangTop, cfg.f_langTop || 'en');
+    if (fLangBottom) fill(fLangBottom, cfg.f_langBottom || 'zh-TW');
+
+    recTop = makeFaceSide('f_langTop', 'f_resultTop', 'f_micTop', () => $('f_langBottom').value);
+    recBottom = makeFaceSide('f_langBottom', 'f_resultBottom', 'f_micBottom', () => $('f_langTop').value);
+
+    if (fLangTop) {
+        fLangTop.addEventListener('change', () => { 
+            cfg.f_langTop = fLangTop.value; 
+            try { localStorage.setItem('translator_cfg', JSON.stringify(cfg)); } catch(e){} 
+        });
+    }
+    if (fLangBottom) {
+        fLangBottom.addEventListener('change', () => { 
+            cfg.f_langBottom = fLangBottom.value; 
+            try { localStorage.setItem('translator_cfg', JSON.stringify(cfg)); } catch(e){} 
+        });
+    }
+}
+
+/* =========================================================
+   模式切換
+   ========================================================= */
+let mode = 'single';
+const modeBtn = $('modeBtn');
+if (modeBtn) {
+    modeBtn.addEventListener('click', () => {
+        if (liveOn) stopLive();
+        if (recTop && recTop.active) recTop.stop();
+        if (recBottom && recBottom.active) recBottom.stop();
+        
+        mode = mode === 'single' ? 'face' : 'single';
+        $('singleView').classList.toggle('hidden', mode !== 'single');
+        $('faceView').classList.toggle('hidden', mode !== 'face');
+        modeBtn.textContent = mode === 'single' ? '👤 單人' : '👥 面對面';
+    });
 }
