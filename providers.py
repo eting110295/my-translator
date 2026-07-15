@@ -15,9 +15,9 @@ import re
 import base64
 import requests
 
-DEFAULT_GEMINI_MODEL = "gemini-3.5-flash"
-# 多模態（圖片 / PDF）分析用模型：gemini-3.5-flash 為 GA 版，原生支援影像與 PDF
-DEFAULT_VISION_MODEL = "gemini-3.5-flash"
+DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+# 多模態（圖片 / PDF）分析用模型：gemini-2.5-flash 為 GA 版，原生支援影像與 PDF
+DEFAULT_VISION_MODEL = "gemini-2.5-flash"
 
 
 def build_prompt(source: str, target: str):
