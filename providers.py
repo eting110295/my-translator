@@ -97,7 +97,7 @@ def translate(data: Dict) -> Dict:
         
         # 建立模型實例
         model = genai.GenerativeModel(
-            model_name='gemini-3.5-flash',
+            model_name='gemini-3.1-flash-lite',
             system_instruction='你是一個專業翻譯助手。只輸出翻譯結果，不要任何解釋。'
         )
         
