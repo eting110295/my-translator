@@ -113,12 +113,6 @@ def translate(data: Dict) -> Dict:
             'translation': translation
         }
     
-    except genai.types.APIError as e:
-        # API 錯誤（如配額不足）
-        error_msg = f'Gemini API 錯誤：{str(e)}'
-        print(f'[ERROR] {error_msg}')
-        return {'ok': False, 'error': error_msg}
-    
     except ValueError as e:
         # API Key 未設置
         error_msg = str(e)
