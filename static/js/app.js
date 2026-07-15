@@ -18,6 +18,23 @@ window.onerror = function(message, source, lineno, colno, error) {
     errDiv.textContent = 'JS 錯誤：' + errorMsg;
 };
 
+// 全域 Debug 日誌顯示（幫助動態了解瀏覽器端運行狀態）
+function showDebugLog(msg) {
+    console.log('[DEBUG LOG]:', msg);
+    let logDiv = document.getElementById('debugLogBox');
+    if (!logDiv) {
+        logDiv = document.createElement('div');
+        logDiv.id = 'debugLogBox';
+        logDiv.style.cssText = 'position:fixed;bottom:10px;right:10px;width:300px;max-height:200px;overflow-y:auto;background:rgba(0,0,0,0.85);color:#00ff00;padding:10px;z-index:9999;font-size:11px;font-family:monospace;border-radius:5px;border:1px solid #00ff00;word-break:break-all;';
+        document.body.appendChild(logDiv);
+    }
+    const p = document.createElement('p');
+    p.style.margin = '2px 0';
+    p.textContent = new Date().toLocaleTimeString() + ': ' + msg;
+    logDiv.appendChild(p);
+    logDiv.scrollTop = logDiv.scrollHeight;
+}
+
 /* ============================================
    全局變量與設定載入
    ============================================ */
