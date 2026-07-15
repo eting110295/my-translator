@@ -4,6 +4,7 @@ import os
 import requests
 import providers
 import mimetypes
+from google import genai
 
 # 強制映射 MIME 類型，修復 Windows 註冊表關聯造成的 CSS/JS 無法加載問題
 mimetypes.add_type('text/css', '.css')
@@ -16,6 +17,8 @@ app = Flask(__name__,
             static_url_path='/static')
 LIBRETRANSLATE_API = os.getenv('LIBRETRANSLATE_API', 'https://libretranslate.de')
 OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY')
+API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+TTS_MODEL = "gemini-3.1-flash-tts-preview"
 
 fallback_languages = [
     {'code': 'en', 'name': 'English'},
@@ -55,6 +58,44 @@ def api_translate():
     data = request.get_json(force=True, silent=True) or {}
     result = providers.translate(data)
     return jsonify(result), (200 if result.get('ok') else 400)
+
+
+# ===== TTS API =====
+@app.route('/api/tts', methods=['POST'])
+def api_tts():
+    from flask import Response
+    data = request.get_json(force=True, silent=True) or {}
+    text = (data.get('text') or '').strip()
+    if not text:
+        return ('', 204)
+    key = (data.get('gemini_key') or '').strip() or API_KEY   # 選填覆蓋，留空用伺服器內建
+    if not key:
+        return jsonify({'error': 'no gemini key'}), 400
+
+    from google.genai import types
+    client = genai.Client(api_key=key)
+    cfg = types.GenerateContentConfig(
+        response_modalities=['AUDIO'],
+        speech_config=types.SpeechConfig(
+            voice_config=types.VoiceConfig(
+                prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name='Kore')
+            )
+        ),
+    )
+    # 預覽版 TTS 模型偶爾會「吐文字而非音訊」導致 400 → 重試最多 3 次
+    last_err = 'unknown'
+    for _attempt in range(3):
+        try:
+            resp = client.models.generate_content(model=TTS_MODEL, contents=text, config=cfg)
+            for part in resp.candidates[0].content.parts:
+                inline = getattr(part, 'inline_data', None)
+                if inline is not None and inline.data:
+                    return Response(inline.data, mimetype='application/octet-stream')  # 24kHz 16-bit PCM
+            last_err = 'model returned text instead of audio'
+        except Exception as e:
+            last_err = str(e)
+    app.logger.error(f"TTS failed after retries: {last_err}")
+    return jsonify({'error': last_err}), 400
 
 
 @app.route('/weather')
