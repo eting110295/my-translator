@@ -612,18 +612,10 @@ function playLiveAudio(data) {
 }
 
 
-/* ============================================
-   4. 簡中轉繁中（簡轉繁）修正
-   ============================================ */
 async function convertSimplifiedToTraditional(text) {
-    try {
-        const out = await translate(text, 'Simplified Chinese', 'Traditional Chinese');
-        return out;
-    } catch (e) {
-        console.warn('簡轉繁失敗:', e.message);
-        return text; // 失敗時返回原文
-    }
+    return toTraditional(text);
 }
+
 
 /* ============================================
    5. 頁面載入完成時執行初始化
@@ -742,6 +734,12 @@ function stopLive() {
     if (liveStream) { liveStream.getTracks().forEach(t => t.stop()); liveStream = null; }
     if (socket) socket.emit('stop_session');
 }
+
+@socketio.on('audio_in')
+def handle_audio(data):
+    sid = request.sid
+    if sid in active_sessions:
+        active_sessions[sid].add_audio(data)
 
 function toggleMic(btn, on) {
     if (!btn) return;
