@@ -335,6 +335,7 @@ def add_header(response):
     return response
 
 
+# ===== 5. 拍照 / 檔案 API =====
 def _provider_cfg(src):
     """從 request (json 或 form) 取出供應商設定。"""
     provider = (src.get('provider') or 'gemini').lower()
