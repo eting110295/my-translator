@@ -4,6 +4,20 @@
 
 console.log('app.js 已載入');
 
+// 全域錯誤監聽器（幫助診斷瀏覽器端錯誤）
+window.onerror = function(message, source, lineno, colno, error) {
+    const errorMsg = `${message} (在 ${source}:${lineno}:${colno})`;
+    console.error('GLOBAL ERROR:', errorMsg);
+    let errDiv = document.getElementById('debugErrorBox');
+    if (!errDiv) {
+        errDiv = document.createElement('div');
+        errDiv.id = 'debugErrorBox';
+        errDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:#ff4d4d;color:white;padding:10px;z-index:9999;font-size:14px;text-align:center;word-break:break-all;font-weight:bold;box-shadow:0 2px 10px rgba(0,0,0,0.3);';
+        document.body.appendChild(errDiv);
+    }
+    errDiv.textContent = 'JS 錯誤：' + errorMsg;
+};
+
 /* ============================================
    全局變量與設定載入
    ============================================ */
