@@ -70,7 +70,7 @@ const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecogni
 
 /* Helper Functions for Face-to-Face Mode */
 const $ = (id) => document.getElementById(id);
-const byId = (id) => ({ id, bcp: BCP[id] || 'en-US' });
+const byId = (id) => ({ id, bcp: BCP[id] || 'en-US', name: NAME[id] || 'English' });
 const setResult = (el, text, isPlaceholder = false) => {
     if (!el) return;
     el.textContent = text;
@@ -735,12 +735,6 @@ function stopLive() {
     if (socket) socket.emit('stop_session');
 }
 
-@socketio.on('audio_in')
-def handle_audio(data):
-    sid = request.sid
-    if sid in active_sessions:
-        active_sessions[sid].add_audio(data)
-
 function toggleMic(btn, on) {
     if (!btn) return;
     btn.classList.toggle('recording', on);
@@ -838,4 +832,134 @@ if (modeBtn) {
         $('faceView').classList.toggle('hidden', mode !== 'face');
         modeBtn.textContent = mode === 'single' ? '👤 單人' : '👥 面對面';
     });
+}
+
+
+/* =========================================================
+   拍照翻譯 / 上傳檔案翻譯 (摘要 + 翻譯) 共用與 API 端點
+   ========================================================= */
+function providerBody() {
+    return {
+        provider: 'gemini',
+        base_url: '',
+        api_key: cfg.geminikey || '',
+        model: ''
+    };
+}
+
+const visionModal = $('visionModal');
+let lastVisionText = '';   // 供「朗讀」按鈕使用
+
+// 相機影像 client 端縮圖：省流量、加速雲端辨識（Gemini 最佳邊長約 1568px）
+function fileToDownscaledDataURL(file, maxDim = 1568, quality = 0.85) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+            const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('圖片讀取失敗')); };
+        img.src = url;
+    });
+}
+function dataURLToBlob(dataURL) {
+    const [head, b64] = dataURL.split(',');
+    const mime = (head.match(/data:(.*?);/) || [, 'image/jpeg'])[1];
+    const bin = atob(b64);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+}
+
+
+function openVision(title) {
+    stopAllAudio(); setVisionSpeakBtn(false);   // 開新的一張前，先停掉上一段朗讀
+    $('visionTitle').textContent = title;
+    $('visionResult').classList.add('hidden');
+    $('visionSummary').textContent = '';
+    $('visionTranslation').textContent = '';
+    $('visionStatus').textContent = '';
+    const prev = $('visionPreview'); prev.classList.add('hidden'); prev.innerHTML = '';
+    lastVisionText = '';
+    visionModal.classList.remove('hidden');
+}
+function renderVision(result) {
+    $('visionStatus').textContent = result.note ? ('ℹ️ ' + result.note) : '';
+    const summary = (result.summary || '').trim();
+    const translation = (result.translation || '').trim();
+    $('visionSummary').textContent = summary || '（無摘要）';
+    $('visionTranslation').textContent = translation || '（無可翻譯文字）';
+    $('visionResult').classList.remove('hidden');
+    lastVisionText = translation || summary;
+    if (translation || summary) {
+        pushHistory('（拍照／檔案）', (summary ? summary + '\n' : '') + translation);
+    }
+}
+
+
+// --- 相機拍照 ---
+if ($('s_camera')) {
+    $('s_camera').addEventListener('click', () => $('cameraInput').click());
+}
+if ($('cameraInput')) {
+    $('cameraInput').addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        e.target.value = '';                         // 允許再次拍同一來源
+        if (!file) return;
+        openVision('📷 拍照翻譯');
+        try {
+            $('visionStatus').textContent = '影像處理中…';
+            const dataURL = await fileToDownscaledDataURL(file);
+            $('visionPreview').innerHTML = `<img src="${dataURL}" alt="preview" style="max-width: 100%; max-height: 300px; border-radius: 5px;">`;
+            $('visionPreview').classList.remove('hidden');
+            $('visionStatus').textContent = '雲端辨識與翻譯中…（約數秒）';
+            const target = byId($('vision_target').value).name;
+            const res = await fetch('/api/vision', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: dataURL, target, ...providerBody() }),
+            });
+            const data = await res.json();
+            if (!data.ok) throw new Error(data.error || '辨識失敗');
+            renderVision(data);
+        } catch (err) { $('visionStatus').textContent = '❌ ' + err.message; toast(err.message); }
+    });
+}
+
+
+// 朗讀鈕：可切換 —— 沒在念就開始念，念的過程中變「⏹ 停止」，可隨時中斷
+let visionSpeaking = false;
+function setVisionSpeakBtn(on) {
+    visionSpeaking = on;
+    if ($('vision_speak')) {
+        $('vision_speak').textContent = on ? '⏹ 停止' : '🔊 朗讀';
+    }
+}
+if ($('vision_speak')) {
+    $('vision_speak').addEventListener('click', () => {
+        if (visionSpeaking) { stopAllAudio(); return; }   // 念到一半按 = 停止
+        if (!lastVisionText) { toast('沒有可朗讀的內容'); return; }
+        ensureAudioUnlocked();                              // 手機須在點擊當下解鎖音訊
+        setVisionSpeakBtn(true);
+        // 手動朗讀，不受自動朗讀設定影響；播放結束（自然念完或被停止）時把鈕還原
+        speak(lastVisionText, byId($('vision_target').value).bcp, true, () => setVisionSpeakBtn(false));
+    });
+}
+if ($('vision_close')) {
+    $('vision_close').addEventListener('click', () => {
+        stopAllAudio();                                    // 關閉同時停掉雲端與瀏覽器語音
+        setVisionSpeakBtn(false);
+        visionModal.classList.add('hidden');
+    });
+}
+
+// 額外綁定底部關閉按鈕，讓它也點擊 vision_close
+const visionCloseBtn = $('vision_close_btn');
+if (visionCloseBtn) {
+    visionCloseBtn.addEventListener('click', () => $('vision_close').click());
 }

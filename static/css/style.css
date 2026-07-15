@@ -586,5 +586,20 @@ html, body {
 .mode-btn:hover {
     background: rgba(255, 255, 255, 0.15);
     color: var(--accent-light);
-    box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.25);
+}
+
+/* ============ 拍照翻譯樣式 ============ */
+.vision-preview img {
+    max-width: 100%;
+    max-height: 250px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+#visionResult .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--accent);
 }

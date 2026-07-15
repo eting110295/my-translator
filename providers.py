@@ -39,7 +39,7 @@ def build_prompt(source: str, target: str):
 
 
 def translate_gemini(api_key: str, model: str, system: str, text: str) -> str:
-    """呼叫 Google Gemini 的 generate_content。"""
+    """呼召 Google Gemini 的 generate_content。"""
     from google import genai
     from google.genai import types
 
@@ -56,7 +56,7 @@ def translate_gemini(api_key: str, model: str, system: str, text: str) -> str:
 
 
 def translate_openai(base_url: str, api_key: str, model: str, system: str, text: str, timeout: int = 30) -> str:
-    """呼叫 OpenAI 相容的 /chat/completions 端點。"""
+    """呼召 OpenAI 相容的 /chat/completions 端點。"""
     if not base_url:
         base_url = "https://api.openai.com/v1"
     url = base_url.rstrip("/")
@@ -130,3 +130,134 @@ def translate(data: dict) -> dict:
         return {"ok": False, "error": f"HTTP {e.response.status_code if e.response else '?'}: {body}"}
     except Exception as e:
         return {"ok": False, "error": f"{type(e).__name__}: {e}"}
+
+
+def _vision_system(target_name: str) -> str:
+    """產生「摘要 + 翻譯」用的 system 指令，強制 JSON 輸出。"""
+    return (
+        "You are a visual & document translation assistant. "
+        "The input may be a photo or file containing a menu, sign, form, article, or any text.\n"
+        "Do the following:\n"
+        "1. Read and understand all meaningful text and visual information in the input.\n"
+        f"2. Write a concise, well-organized summary of the key points, written in {target_name}.\n"
+        f"3. Provide a faithful, natural full translation of the text content into {target_name}.\n"
+        'Respond with ONLY a JSON object of the exact shape '
+        '{"summary": "...", "translation": "..."}. '
+        "No markdown, no code fences, no extra commentary. "
+        "If there is no readable text, explain that in the summary and use an empty string for translation."
+    )
+
+
+def _parse_json_result(raw: str) -> dict:
+    """把 LLM 回傳解析成 {summary, translation}，容忍 code fence 或被截斷 of JSON。"""
+    raw = (raw or "").strip()
+    if raw.startswith("```"):
+        raw = re.sub(r"^```[a-zA-Z]*\n?", "", raw)
+        raw = re.sub(r"\n?```$", "", raw).strip()
+    try:
+        obj = json.loads(raw)
+        return {
+            "summary": (obj.get("summary") or "").strip(),
+            "translation": (obj.get("translation") or "").strip(),
+        }
+    except Exception:
+        pass
+
+    # 容忍截斷（超長文件可能超出輸出上限）：用正則救回 summary / translation 欄位
+    def grab(key):
+        m = re.search(r'"' + key + r'"\s*:\s*"((?:[^"\\]|\\.)*)', raw)
+        if not m:
+            return ""
+        frag = m.group(1)
+        try:
+            return json.loads('"' + frag + '"')   # 還原 JSON 跳脫字元
+        except Exception:
+            return frag
+    summary, translation = grab("summary"), grab("translation")
+    if summary or translation:
+        return {"summary": summary.strip(), "translation": translation.strip()}
+    return {"summary": "", "translation": raw}
+
+
+def _analyze_gemini(api_key: str, model: str, system: str,
+                    text: str, file_bytes: bytes, mime_type: str) -> str:
+    """Gemini 多模態：圖片 / PDF 原生讀取，回傳原始 JSON 字串。"""
+    from google import genai
+    from google.genai import types
+
+    if model and not model.startswith("gemini"):
+        model = ""   # 避免把 OpenAI 模型名誤送給 Gemini
+
+    client = genai.Client(api_key=api_key)
+    parts = []
+    if file_bytes is not None:
+        parts.append(types.Part.from_bytes(data=file_bytes, mime_type=mime_type or "application/octet-stream"))
+    if text:
+        parts.append(text)
+    if not parts:
+        return ""
+
+    resp = client.models.generate_content(
+        model=model or DEFAULT_VISION_MODEL,
+        contents=parts,
+        config=types.GenerateContentConfig(
+            system_instruction=system,
+            temperature=0.3,
+            response_mime_type="application/json",
+            max_output_tokens=8192,
+            # 關閉 thinking：OCR/摘要/翻譯不需推理，且能避免思考 token 吃掉輸出額度導致 JSON 被截斷
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
+        ),
+    )
+    return resp.text or ""
+
+
+def _analyze_openai(base_url: str, api_key: str, model: str, system: str,
+                    text: str, file_bytes: bytes, mime_type: str, timeout: int = 90) -> str:
+    """OpenAI 相容多模態（vision）：圖片以 data URL 塞進 content，回傳原始 JSON 字串。"""
+    if not base_url:
+        base_url = "https://api.openai.com/v1"
+    url = base_url.rstrip("/")
+    if not url.endswith("/chat/completions"):
+        url = url + "/chat/completions"
+
+    content = []
+    if text:
+        content.append({"type": "text", "text": text})
+    if file_bytes is not None:
+        b64 = base64.b64encode(file_bytes).decode()
+        data_url = f"data:{mime_type or 'image/jpeg'};base64,{b64}"
+        content.append({"type": "image_url", "image_url": {"url": data_url}})
+    if not content:
+        content = [{"type": "text", "text": ""}]
+
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    # 不傳 temperature / max_tokens：盡量相容各家 (OpenAI/Groq/DeepSeek/OpenRouter…)；截斷由解析器容錯
+    payload = {
+        "model": model or "gpt-5.5",
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": content},
+        ],
+    }
+    r = requests.post(url, headers=headers, json=payload, timeout=timeout)
+    r.raise_for_status()
+    data = r.json()
+    return data["choices"][0]["message"]["content"] or ""
+
+
+def analyze(provider: str, api_key: str, model: str, target_name: str,
+            base_url: str = "", text: str = None,
+            file_bytes: bytes = None, mime_type: str = None) -> dict:
+    """
+    多模態分析 → {summary, translation}，依 provider 走 Gemini 或 OpenAI 相容。
+      - file_bytes + mime_type：圖片 (或 PDF，僅 Gemini 支援原生讀取)
+      - text：純文字內容
+    """
+    system = _vision_system(target_name)
+    provider = (provider or "gemini").lower()
+    if provider == "openai":
+        raw = _analyze_openai(base_url, api_key, model, system, text, file_bytes, mime_type)
+    else:
+        raw = _analyze_gemini(api_key, model, system, text, file_bytes, mime_type)
+    return _parse_json_result(raw)

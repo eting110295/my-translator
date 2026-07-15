@@ -335,6 +335,85 @@ def add_header(response):
     return response
 
 
+def _provider_cfg(src):
+    """從 request (json 或 form) 取出供應商設定。"""
+    provider = (src.get('provider') or 'gemini').lower()
+    return {
+        'provider': provider,
+        'base_url': src.get('base_url') or '',
+        'api_key': src.get('api_key') or '',
+        'model': src.get('model') or '',
+    }
+
+
+def _run_analyze(pc, target, force_gemini=False, **kw):
+    """
+    依供應商設定執行 providers.analyze，統一處理金鑰解析與錯誤。
+    force_gemini=True 時（例如 PDF）強制走伺服器 Gemini 金鑰。
+    回傳 (result_dict, status_code)。
+    """
+    provider = pc['provider']
+    note = None
+    if force_gemini and provider != 'gemini':
+        provider = 'gemini'
+        note = 'PDF 不支援所選供應商，已自動改用 Gemini 雲端辨識'
+
+    try:
+        if provider == 'openai':
+            if not pc['api_key']:
+                return {"ok": False, "error": "OpenAI 相容供應商需要 API Key（請到設定填入）"}, 400
+            result = providers.analyze('openai', pc['api_key'], pc['model'], target,
+                                       base_url=pc['base_url'], **kw)
+        else:  # gemini
+            key = (pc['api_key'] if pc['provider'] == 'gemini' else '') or API_KEY
+            if not key:
+                return {"ok": False, "error": "找不到 Gemini API Key"}, 400
+            model = pc['model'] if pc['provider'] == 'gemini' else ''
+            result = providers.analyze('gemini', key, model, target, **kw)
+    except requests.HTTPError as e:
+        body = ''
+        try:
+            body = e.response.text[:300]
+        except Exception:
+            pass
+        return {"ok": False, "error": f"HTTP {e.response.status_code if e.response else '?'}: {body}"}, 400
+    except Exception as e:
+        logger.error(f"analyze error: {e}")
+        return {"ok": False, "error": f"{type(e).__name__}: {e}"}, 400
+
+    out = {"ok": True, **result}
+    if note:
+        out["note"] = note
+    return out, 200
+
+
+@app.route('/api/vision', methods=['POST'])
+def api_vision():
+    """相機拍照 → 摘要 + 翻譯。前端傳 base64 影像（可含 dataURL 前綴）+ 供應商設定。"""
+    import base64 as _b64
+    data = request.get_json(force=True, silent=True) or {}
+    image_b64 = data.get('image') or ''
+    target = data.get('target') or 'Traditional Chinese (Taiwan)'
+    if not image_b64:
+        return jsonify({"ok": False, "error": "no image"}), 400
+
+    mime = 'image/jpeg'
+    if image_b64.startswith('data:'):
+        try:
+            header, image_b64 = image_b64.split(',', 1)
+            mime = header.split(':', 1)[1].split(';', 1)[0] or mime
+        except Exception:
+            pass
+    try:
+        raw = _b64.b64decode(image_b64)
+    except Exception:
+        return jsonify({"ok": False, "error": "影像解碼失敗"}), 400
+
+    pc = _provider_cfg(data)
+    result, status = _run_analyze(pc, target, file_bytes=raw, mime_type=mime)
+    return jsonify(result), status
+
+
 if __name__ == '__main__':
     debug_mode = os.getenv('FLASK_DEBUG', 'True').lower() in ('1', 'true', 'yes')
     socketio.run(
