@@ -5,7 +5,7 @@
 console.log('app.js 已載入');
 
 /* ============================================
-   全局變量
+   全局變量與設定載入
    ============================================ */
 let langA, langB, result;
 
@@ -14,6 +14,16 @@ const cfg = {
     rate: 1,
     geminikey: ''
 };
+
+// 從 LocalStorage 載入使用者設定
+try {
+    const savedCfg = localStorage.getItem('translator_cfg');
+    if (savedCfg) {
+        Object.assign(cfg, JSON.parse(savedCfg));
+    }
+} catch (e) {
+    console.warn('載入設定失敗:', e);
+}
 
 const BCP = {
     'zh-TW': 'zh-TW',
@@ -235,6 +245,70 @@ function setupEventListeners() {
     
     if (langA) fill(langA, 'zh-TW');
     if (langB) fill(langB, 'en');
+    
+    // === 設定彈窗控制邏輯 ===
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = document.getElementById('settingsModal');
+    const closeBtn = settingsModal ? settingsModal.querySelector('.close-btn') : null;
+    const saveSettings = document.getElementById('saveSettings');
+    
+    const cfgGeminiKey = document.getElementById('cfgGeminiKey');
+    const cfgAutoSpeak = document.getElementById('cfgAutoSpeak');
+    const cfgRate = document.getElementById('cfgRate');
+    const cfgRateVal = document.getElementById('cfgRateVal');
+
+    if (settingsBtn && settingsModal) {
+        // 開啟設定
+        settingsBtn.onclick = () => {
+            if (cfgGeminiKey) cfgGeminiKey.value = cfg.geminikey || '';
+            if (cfgAutoSpeak) cfgAutoSpeak.checked = cfg.autospeak;
+            if (cfgRate) {
+                cfgRate.value = cfg.rate;
+                if (cfgRateVal) cfgRateVal.textContent = parseFloat(cfg.rate).toFixed(1);
+            }
+            settingsModal.style.display = 'flex';
+        };
+
+        // 關閉設定 (點叉叉)
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                settingsModal.style.display = 'none';
+            };
+        }
+
+        // 點擊彈窗外部關閉
+        window.addEventListener('click', (e) => {
+            if (e.target === settingsModal) {
+                settingsModal.style.display = 'none';
+            }
+        });
+
+        // 速度拉桿連動
+        if (cfgRate && cfgRateVal) {
+            cfgRate.oninput = (e) => {
+                cfgRateVal.textContent = parseFloat(e.target.value).toFixed(1);
+            };
+        }
+
+        // 儲存設定
+        if (saveSettings) {
+            saveSettings.onclick = () => {
+                if (cfgGeminiKey) cfg.geminikey = cfgGeminiKey.value.trim();
+                if (cfgAutoSpeak) cfg.autospeak = cfgAutoSpeak.checked;
+                if (cfgRate) cfg.rate = parseFloat(cfgRate.value) || 1.0;
+
+                try {
+                    localStorage.setItem('translator_cfg', JSON.stringify(cfg));
+                    console.log('設定已儲存:', cfg);
+                } catch (e) {
+                    console.error('儲存設定失敗:', e);
+                }
+
+                settingsModal.style.display = 'none';
+                toast('設定已儲存！');
+            };
+        }
+    }
     
     // 文字輸入 - 更新字數
     const inputText = document.getElementById('inputText');
@@ -485,6 +559,17 @@ if (socket) {
 
 function toast(msg) {
     console.log('Toast:', msg);
+    let t = document.querySelector('.toast-msg');
+    if (!t) {
+        t = document.createElement('div');
+        t.className = 'toast-msg';
+        document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => {
+        t.classList.remove('show');
+    }, 2000);
 }
 
 async function toggleLive() { liveOn ? stopLive() : startLive(); }
