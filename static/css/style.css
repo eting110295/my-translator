@@ -1,4 +1,4 @@
-﻿/* ============================================
+/* ============================================
    CSS 骨架：深紫色漸層背景 + 金色重點
    ============================================ */
 
@@ -129,12 +129,42 @@ html, body {
     flex: 1;
     min-height: 120px;
     padding: 20px;
+    padding-bottom: 50px; /* 為右下角按鈕保留空間 */
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 16px;
     overflow-y: auto;
     line-height: 1.6;
     font-size: 1.1rem;
+    position: relative; /* 用於定位朗讀按鈕 */
+}
+
+.tts-btn {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    color: var(--primary-dark);
+    border: none;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(212, 175, 55, 0.3);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.tts-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(212, 175, 55, 0.4);
+}
+
+.tts-btn:active {
+    transform: translateY(0);
 }
 
 .result-box .placeholder {

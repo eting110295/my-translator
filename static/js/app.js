@@ -193,6 +193,9 @@ function setupSpeechRecognition() {
         if (!text) return;
         
         result.textContent = '翻譯中…';
+        const ttsBtn = document.getElementById('ttsBtn');
+        if (ttsBtn) ttsBtn.style.display = 'none';
+        
         try {
             // 自動簡轉繁
             let finalText = text;
@@ -204,8 +207,16 @@ function setupSpeechRecognition() {
             const out = await translate(finalText, NAME[langA.value], NAME[langB.value]);
             result.textContent = out;
             
-            // 自動朗讀
-            speak(out, BCP[langB.value] || 'en-US');
+            // 顯示朗讀按鈕並開始自動播放
+            if (ttsBtn) {
+                ttsBtn.style.display = 'flex';
+                ttsBtn.innerHTML = '■ 停止';
+                speak(out, BCP[langB.value] || 'en-US', false, () => {
+                    ttsBtn.innerHTML = '🔊 朗讀';
+                });
+            } else {
+                speak(out, BCP[langB.value] || 'en-US');
+            }
         } catch (e) {
             result.textContent = '（翻譯失敗）';
             alert(e.message);
@@ -244,23 +255,52 @@ function setupEventListeners() {
     };
     
     // 翻譯鈕 - 呼叫後端翻譯 API
+    const ttsBtn = document.getElementById('ttsBtn');
     document.getElementById('send').onclick = async () => {
         const text = document.getElementById('inputText').value.trim();
         if (!text) return;
         
         ensureAudioUnlocked(); // 解鎖音訊
         result.textContent = '翻譯中…';
+        if (ttsBtn) ttsBtn.style.display = 'none';
         try {
             const out = await translate(text, NAME[langA.value], NAME[langB.value]);
             result.textContent = out;
             
-            // 語音朗讀
-            speak(out, BCP[langB.value] || 'en-US');
+            // 語音朗讀與按鈕連動
+            if (ttsBtn) {
+                ttsBtn.style.display = 'flex';
+                ttsBtn.innerHTML = '■ 停止';
+                speak(out, BCP[langB.value] || 'en-US', false, () => {
+                    ttsBtn.innerHTML = '🔊 朗讀';
+                });
+            } else {
+                speak(out, BCP[langB.value] || 'en-US');
+            }
         } catch (e) {
             result.textContent = '（翻譯失敗）';
             alert(e.message);
         }
     };
+    
+    // 朗讀/停止按鈕
+    if (ttsBtn) {
+        ttsBtn.onclick = () => {
+            ensureAudioUnlocked();
+            const text = result.textContent.trim();
+            if (!text || text === '翻譯中…' || text === '（翻譯失敗）') return;
+            
+            if (ttsBtn.innerHTML.includes('停止')) {
+                stopAllAudio();
+                ttsBtn.innerHTML = '🔊 朗讀';
+            } else {
+                ttsBtn.innerHTML = '■ 停止';
+                speak(text, BCP[langB.value] || 'en-US', true, () => {
+                    ttsBtn.innerHTML = '🔊 朗讀';
+                });
+            }
+        };
+    }
     
     // 麥克風按鈕 - 語音輸入
     const micBtn = document.getElementById('micBtn');
