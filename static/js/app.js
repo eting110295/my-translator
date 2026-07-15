@@ -95,22 +95,28 @@ class Recognizer {
         this.buffer = '';
     }
     start() {
+        showDebugLog('Recognizer.start() called, bcp=' + this.bcp);
         if (!SpeechRecognition) { 
+            showDebugLog('SpeechRecognition not supported in this browser');
             toast('此瀏覽器不支援語音辨識，請改用文字輸入'); 
             return; 
         }
         // 確保中止其他可能正在聽寫的辨識器，避免設備衝突
         if (typeof sRecognizer !== 'undefined' && sRecognizer && this !== sRecognizer && sRecognizer.active) {
+            showDebugLog('Stopping active sRecognizer');
             try { sRecognizer.stop(); } catch(e){}
         }
         if (typeof recTop !== 'undefined' && recTop && this !== recTop && recTop.active) {
+            showDebugLog('Stopping active recTop');
             try { recTop.stop(); } catch(e){}
         }
         if (typeof recBottom !== 'undefined' && recBottom && this !== recBottom && recBottom.active) {
+            showDebugLog('Stopping active recBottom');
             try { recBottom.stop(); } catch(e){}
         }
 
         if (this.active) { 
+            showDebugLog('Recognizer is already active, calling stop()');
             this.stop(); 
             return; 
         }
@@ -119,7 +125,13 @@ class Recognizer {
         rec.lang = this.bcp;
         rec.interimResults = true;
         rec.continuous = true;
+        
+        rec.onstart = () => {
+            showDebugLog('SpeechRecognition.onstart fired');
+        };
+        
         rec.onresult = (e) => {
+            showDebugLog('SpeechRecognition.onresult fired');
             let interim = '';
             for (let i = e.resultIndex; i < e.results.length; i++) {
                 const r = e.results[i];
@@ -130,9 +142,11 @@ class Recognizer {
                 }
             }
             const shown = (this.buffer + interim).trim();
+            showDebugLog('Interim transcript: ' + shown);
             if (shown) this.onInterim?.(shown);
         };
         rec.onerror = (e) => {
+            showDebugLog('SpeechRecognition.onerror fired: ' + e.error);
             if (e.error === 'no-speech' || e.error === 'aborted') return;
             if (e.error === 'not-allowed') {
                 toast('麥克風權限被拒絕，請允許後重試');
@@ -141,8 +155,14 @@ class Recognizer {
             }
         };
         rec.onend = () => {
+            showDebugLog('SpeechRecognition.onend fired, active=' + this.active);
             if (this.active) { 
-                try { rec.start(); } catch {} 
+                try { 
+                    showDebugLog('restarting SpeechRecognition');
+                    rec.start(); 
+                } catch(err) {
+                    showDebugLog('restart failed: ' + err.message);
+                } 
             } else {
                 this.onState?.(false);
             }
@@ -152,18 +172,22 @@ class Recognizer {
         try { 
             rec.start(); 
             this.onState?.(true); 
+            showDebugLog('rec.start() executed successfully');
         } catch (e) { 
+            showDebugLog('rec.start() threw error: ' + e.message);
             toast('無法啟動麥克風'); 
             this.active = false; 
         }
     }
     stop() {
+        showDebugLog('Recognizer.stop() called');
         this.active = false;
         if (this.rec) { 
-            try { this.rec.stop(); } catch {} 
+            try { this.rec.stop(); } catch(e) { showDebugLog('rec.stop() err: ' + e.message); } 
         }
         this.onState?.(false);
         const text = this.buffer.trim();
+        showDebugLog('Recognizer final text: ' + text);
         this.buffer = '';
         if (text) this.onDone?.(text);
     }
