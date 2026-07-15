@@ -105,6 +105,16 @@ class Recognizer {
             toast('此瀏覽器不支援語音辨識，請改用文字輸入'); 
             return; 
         }
+        // 確保中止全域單人語音辨識，避免設備衝突
+        if (recognition) {
+            try { recognition.abort(); } catch(e){}
+        }
+        // 確保中止另一面板的辨識器
+        if (typeof recTop !== 'undefined' && typeof recBottom !== 'undefined') {
+            if (this === recTop && recBottom && recBottom.active) recBottom.stop();
+            if (this === recBottom && recTop && recTop.active) recTop.stop();
+        }
+
         if (this.active) { 
             this.stop(); 
             return; 
@@ -248,6 +258,9 @@ function startListening() {
         alert('您的瀏覽器不支持語音識別');
         return;
     }
+    // 確保中止面對面辨識器，避免設備衝突
+    if (typeof recTop !== 'undefined' && recTop && recTop.active) recTop.stop();
+    if (typeof recBottom !== 'undefined' && recBottom && recBottom.active) recBottom.stop();
     
     // 如果已經在錄音，點擊則停止
     const micBtn = document.getElementById('micBtn');
@@ -833,6 +846,10 @@ if (modeBtn) {
         if (liveOn) stopLive();
         if (recTop && recTop.active) recTop.stop();
         if (recBottom && recBottom.active) recBottom.stop();
+        // 確保中斷單人語音辨識
+        if (recognition) {
+            try { recognition.abort(); } catch(e){}
+        }
         
         mode = mode === 'single' ? 'face' : 'single';
         $('singleView').classList.toggle('hidden', mode !== 'single');
