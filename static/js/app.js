@@ -144,7 +144,7 @@ class Recognizer {
         const rec = new SpeechRecognition();
         rec.lang = this.bcp;
         rec.interimResults = true;
-        rec.continuous = true;
+        rec.continuous = false; // 設為 false，讓瀏覽器自動偵測說話停頓
         
         rec.onstart = () => {
             showDebugLog('SpeechRecognition.onstart fired');
@@ -180,12 +180,8 @@ class Recognizer {
         rec.onend = () => {
             showDebugLog('SpeechRecognition.onend fired, active=' + this.active);
             if (this.active) { 
-                try { 
-                    showDebugLog('restarting SpeechRecognition');
-                    rec.start(); 
-                } catch(err) {
-                    showDebugLog('restart failed: ' + err.message);
-                } 
+                // 說話停頓後自動停止並觸發翻譯
+                this.stop();
             } else {
                 this.onState?.(false);
             }
