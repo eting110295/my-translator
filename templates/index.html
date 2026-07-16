@@ -12,6 +12,40 @@
     <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js"></script>
 </head>
 <body>
+    <!-- Password Gate (SHA-256) -->
+    <div class="password-gate" id="passwordGate">
+        <div class="gate-box">
+            <div class="gate-logo">🌐</div>
+            <div class="gate-title">亮言 · 即時翻譯</div>
+            <div class="gate-subtitle">請輸入密碼以進入使用</div>
+            <p class="gate-disclaimer">本機制僅為閱讀阻擋，非安全保護措施</p>
+
+            <div class="gate-input-wrap">
+                <input type="password" class="gate-input" id="pwInput" placeholder="請輸入密碼..." autocomplete="off">
+                <button class="gate-toggle-pw" id="togglePw" title="顯示/隱藏密碼">&#128065;</button>
+            </div>
+            <button class="gate-btn" id="pwSubmit">進入</button>
+            <div class="gate-error" id="pwError"></div>
+
+            <div class="gate-admin-toggle" id="adminToggle">&#128274; 管理員</div>
+            <div class="admin-panel" id="adminPanel">
+                <h4>密碼管理（需管理員密碼）</h4>
+                <div class="gate-input-wrap" style="margin-bottom:12px;">
+                    <input type="password" class="gate-input" id="adminPwInput" placeholder="管理員密碼..." style="font-size:14px;padding:10px 16px;">
+                </div>
+                <div id="adminContent" style="display:none;">
+                    <ul class="admin-pw-list" id="pwList"></ul>
+                    <div class="admin-add-row">
+                        <input type="text" id="newPwInput" placeholder="新增密碼...">
+                        <button id="addPwBtn">新增</button>
+                    </div>
+                    <div class="admin-msg" id="adminMsg"></div>
+                    <button class="gate-btn" id="enterSiteBtn" style="margin-top:12px;font-size:14px;padding:10px;">進入網站</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <!-- 頂部標題列 -->
         <header class="topbar">
@@ -156,6 +190,15 @@
                 <label for="cfgRate">語音朗讀速度 (<span id="cfgRateVal">1.0</span>x)：</label>
                 <input type="range" id="cfgRate" min="0.5" max="2.0" step="0.1" value="1.0">
             </div>
+            <div class="form-group">
+                <label for="cfgTheme">背景風格主題：</label>
+                <select id="cfgTheme" class="lang-select" style="width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: var(--bg-card); color: var(--text-primary); font-family: inherit;">
+                    <option value="purple">🔮 紫金</option>
+                    <option value="ocean">🌊 海洋藍</option>
+                    <option value="forest">🌲 森林綠</option>
+                    <option value="sunset">🌅 夕陽橙</option>
+                </select>
+            </div>
             <button id="saveSettings" class="save-btn">儲存設定</button>
         </div>
     </div>
@@ -260,5 +303,199 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/app.js') }}?v=7"></script>
+    <!-- Password Gate Validation Script -->
+    <script>
+    // === Password Gate (SHA-256, 閱讀阻擋用途，非安全保護) ===
+    (function () {
+      'use strict';
+      var ADMIN_HASH       = '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4';
+      // 內建（寫死於程式碼）的使用者密碼雜湊清單；新增請改原始碼並重新部署
+      var BUILTIN_HASHES   = ["03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4"];
+      var HASH_STORAGE     = 'liang_translate_pw';
+      var AUTH_KEY         = 'liang_translate_authed';
+
+      var gate = document.getElementById('passwordGate');
+      if (!gate) return;
+
+      if (sessionStorage.getItem(AUTH_KEY) === '1') {
+        gate.classList.add('hidden');
+        setTimeout(function () { gate.style.display = 'none'; }, 600);
+        return;
+      }
+
+      var pwInput      = document.getElementById('pwInput');
+      var pwSubmit     = document.getElementById('pwSubmit');
+      var pwError      = document.getElementById('pwError');
+      var togglePw     = document.getElementById('togglePw');
+      var adminToggle  = document.getElementById('adminToggle');
+      var adminPanel   = document.getElementById('adminPanel');
+      var adminPwInput = document.getElementById('adminPwInput');
+      var adminContent = document.getElementById('adminContent');
+      var pwList       = document.getElementById('pwList');
+      var newPwInput   = document.getElementById('newPwInput');
+      var addPwBtn     = document.getElementById('addPwBtn');
+      var enterSiteBtn = document.getElementById('enterSiteBtn');
+      var adminMsg     = document.getElementById('adminMsg');
+
+      function sha256(str) {
+        var encoder = new TextEncoder();
+        return crypto.subtle.digest('SHA-256', encoder.encode(str)).then(function (buf) {
+          return Array.from(new Uint8Array(buf)).map(function (b) {
+            return b.toString(16).padStart(2, '0');
+          }).join('');
+        });
+      }
+
+      // 只回傳「管理員另外加在 localStorage 的密碼」，內建密碼一律走 BUILTIN_HASHES
+      function getExtraHashes() {
+        try {
+          var raw = localStorage.getItem(HASH_STORAGE);
+          if (!raw) return [];
+          var parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) return [];
+          // 過濾掉舊格式（明文或不是 64 字元 hex）與已在內建清單中的雜湊
+          return parsed.filter(function (h) {
+            return typeof h === 'string' && h.length === 64 && BUILTIN_HASHES.indexOf(h) === -1;
+          });
+        } catch (e) { return []; }
+      }
+
+      function saveExtraHashes(list) {
+        localStorage.setItem(HASH_STORAGE, JSON.stringify(list));
+      }
+
+      function enterSite() {
+        sessionStorage.setItem(AUTH_KEY, '1');
+        gate.classList.add('hidden');
+        setTimeout(function () { gate.style.display = 'none'; }, 600);
+      }
+
+      if (togglePw) {
+        togglePw.addEventListener('click', function () {
+          pwInput.type = pwInput.type === 'password' ? 'text' : 'password';
+        });
+      }
+
+      function checkPassword() {
+        var val = pwInput.value.trim();
+        if (!val) {
+          pwError.textContent = '請輸入密碼';
+          return;
+        }
+        sha256(val).then(function (hash) {
+          var extras = getExtraHashes();
+          // 進入密碼優先：任何有效密碼（含管理密碼）直接進入，管理面板另由「管理員」開啟
+          if (BUILTIN_HASHES.indexOf(hash) !== -1 || extras.indexOf(hash) !== -1 || hash === ADMIN_HASH) {
+            enterSite();
+          } else {
+            pwError.textContent = '密碼錯誤，請重新輸入';
+            pwInput.value = '';
+            pwInput.focus();
+          }
+        });
+      }
+
+      pwSubmit.addEventListener('click', checkPassword);
+      pwInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') checkPassword();
+      });
+
+
+      if (adminToggle) {
+        adminToggle.addEventListener('click', function () {
+          adminPanel.classList.toggle('show');
+        });
+      }
+
+      if (adminPwInput) {
+        var debounce = null;
+        adminPwInput.addEventListener('input', function () {
+          clearTimeout(debounce);
+          debounce = setTimeout(function () {
+            sha256(adminPwInput.value).then(function (hash) {
+              if (hash === ADMIN_HASH) {
+                if (adminContent) adminContent.style.display = 'block';
+                renderHashList();
+              } else {
+                if (adminContent) adminContent.style.display = 'none';
+              }
+            });
+          }, 200);
+        });
+      }
+
+      function renderHashList() {
+        if (!pwList) return;
+        var extras = getExtraHashes();
+        pwList.innerHTML = '';
+
+        // 內建密碼（不可刪）
+        BUILTIN_HASHES.forEach(function (h) {
+          var li = document.createElement('li');
+          var span = document.createElement('span');
+          span.textContent = h.substring(0, 8) + '...' + h.substring(60) + '（內建）';
+          span.title = h + '（內建，需改原始碼才能刪除）';
+          li.appendChild(span);
+          pwList.appendChild(li);
+        });
+
+        // 管理員額外加的（可刪）
+        extras.forEach(function (h, i) {
+          var li = document.createElement('li');
+          var span = document.createElement('span');
+          span.textContent = h.substring(0, 8) + '...' + h.substring(60);
+          span.title = h;
+          li.appendChild(span);
+          var btn = document.createElement('button');
+          btn.textContent = '刪除';
+          btn.addEventListener('click', function () {
+            var current = getExtraHashes();
+            if (i < 0 || i >= current.length) return;
+            current.splice(i, 1);
+            saveExtraHashes(current);
+            renderHashList();
+            if (adminMsg) {
+              adminMsg.textContent = '已刪除';
+              setTimeout(function () { adminMsg.textContent = ''; }, 2000);
+            }
+          });
+          li.appendChild(btn);
+          pwList.appendChild(li);
+        });
+      }
+
+      function addPassword() {
+        var val = newPwInput.value.trim();
+        if (!val) { if (adminMsg) adminMsg.textContent = '請輸入密碼'; return; }
+        sha256(val).then(function (hash) {
+          if (hash === ADMIN_HASH) { if (adminMsg) adminMsg.textContent = '不可新增管理員密碼'; return; }
+          if (BUILTIN_HASHES.indexOf(hash) !== -1) { if (adminMsg) adminMsg.textContent = '此密碼已是內建密碼'; return; }
+          var extras = getExtraHashes();
+          if (extras.indexOf(hash) !== -1) { if (adminMsg) adminMsg.textContent = '此密碼已存在'; return; }
+          extras.push(hash);
+          saveExtraHashes(extras);
+          newPwInput.value = '';
+          if (adminMsg) {
+            adminMsg.textContent = '⚠ 已加入本機 localStorage（其他裝置無效，要全體生效需改原始碼重部署）';
+            setTimeout(function () { adminMsg.textContent = ''; }, 5000);
+          }
+          renderHashList();
+        });
+      }
+
+      if (addPwBtn) {
+        addPwBtn.addEventListener('click', addPassword);
+      }
+      if (newPwInput) {
+        newPwInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') addPassword();
+        });
+      }
+
+      if (enterSiteBtn) {
+        enterSiteBtn.addEventListener('click', enterSite);
+      }
+    })();
+    </script>
 </body>
 </html>

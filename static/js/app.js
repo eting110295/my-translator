@@ -46,8 +46,14 @@ const cfg = {
     geminikey: '',
     tavilykey: '',
     s_langA: 'zh-TW',
-    s_langB: 'en'
+    s_langB: 'en',
+    theme: 'purple'
 };
+
+// 套用背景風格主題
+function applyTheme(t) {
+    document.body.dataset.theme = t || 'purple';
+}
 
 // 從 LocalStorage 載入使用者設定
 try {
@@ -58,6 +64,9 @@ try {
 } catch (e) {
     console.warn('載入設定失敗:', e);
 }
+
+// 開機套用上次儲存的主題
+applyTheme(cfg.theme);
 
 const BCP = {
     'zh-TW': 'zh-TW',
@@ -404,6 +413,7 @@ function setupEventListeners() {
     const cfgAutoSpeak = document.getElementById('cfgAutoSpeak');
     const cfgRate = document.getElementById('cfgRate');
     const cfgRateVal = document.getElementById('cfgRateVal');
+    const cfgTheme = document.getElementById('cfgTheme');
 
     if (settingsBtn && settingsModal) {
         // 開啟設定
@@ -412,6 +422,7 @@ function setupEventListeners() {
             if (cfgOwmKey) cfgOwmKey.value = cfg.owmkey || '';
             if (cfgTavilyKey) cfgTavilyKey.value = cfg.tavilykey || '';
             if (cfgAutoSpeak) cfgAutoSpeak.checked = cfg.autospeak;
+            if (cfgTheme) cfgTheme.value = cfg.theme || 'purple';
             if (cfgRate) {
                 cfgRate.value = cfg.rate;
                 if (cfgRateVal) cfgRateVal.textContent = parseFloat(cfg.rate).toFixed(1);
@@ -420,25 +431,32 @@ function setupEventListeners() {
             settingsModal.style.display = 'flex';
         };
 
+        const closeSettings = () => {
+            applyTheme(cfg.theme); // 還原成已儲存的主題（撤銷即時預覽）
+            settingsModal.style.display = 'none';
+            if (history.state && history.state.modal === 'settings') {
+                history.back();
+            }
+        };
+
         // 關閉設定 (點叉叉)
         if (closeBtn) {
-            closeBtn.onclick = () => {
-                settingsModal.style.display = 'none';
-                if (history.state && history.state.modal === 'settings') {
-                    history.back();
-                }
-            };
+            closeBtn.onclick = closeSettings;
         }
 
         // 點擊彈窗外部關閉
         window.addEventListener('click', (e) => {
             if (e.target === settingsModal) {
-                settingsModal.style.display = 'none';
-                if (history.state && history.state.modal === 'settings') {
-                    history.back();
-                }
+                closeSettings();
             }
         });
+
+        // 選擇主題時即時套用預覽
+        if (cfgTheme) {
+            cfgTheme.addEventListener('change', () => {
+                applyTheme(cfgTheme.value);
+            });
+        }
 
         // 速度拉桿連動
         if (cfgRate && cfgRateVal) {
@@ -455,6 +473,9 @@ function setupEventListeners() {
                 if (cfgTavilyKey) cfg.tavilykey = cfgTavilyKey.value.trim();
                 if (cfgAutoSpeak) cfg.autospeak = cfgAutoSpeak.checked;
                 if (cfgRate) cfg.rate = parseFloat(cfgRate.value) || 1.0;
+                if (cfgTheme) cfg.theme = cfgTheme.value;
+
+                applyTheme(cfg.theme); // 儲存並套用
 
                 try {
                     localStorage.setItem('translator_cfg', JSON.stringify(cfg));
@@ -1262,6 +1283,7 @@ window.addEventListener('popstate', (e) => {
     }
     const settingsModal = $('settingsModal');
     if (settingsModal && settingsModal.style.display === 'flex') {
+        applyTheme(cfg.theme); // 還原主題
         settingsModal.style.display = 'none';
     }
     const currencyModal = $('currencyModal');

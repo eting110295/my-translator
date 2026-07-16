@@ -3,16 +3,52 @@
    ============================================ */
 
 :root {
-    /* 色系變數 */
-    --primary-dark: #1a0f2e;     /* 深紫 */
-    --primary: #2d1b4e;          /* 主紫 */
-    --primary-light: #3f2b5f;    /* 淺紫 */
-    --accent: #d4af37;           /* 金色 */
-    --accent-light: #f0d758;     /* 淺金 */
+    /* 預設色票：紫金 */
+    --bg1: #1a1030;
+    --bg2: #2a1a4a;
+    --bg3: #3a2560;
+    --gold: #f5c451;
+    --gold-soft: #f7d98a;
+
+    /* 色系變數映射 */
+    --primary-dark: var(--bg1);     /* 深背景 */
+    --primary: var(--bg2);          /* 主背景 */
+    --primary-light: var(--bg3);    /* 淺背景 */
+    --accent: var(--gold);           /* 金色 */
+    --accent-light: var(--gold-soft);     /* 淺金 */
     --text-primary: #ffffff;     /* 主文字 */
     --text-secondary: #b8a8d8;   /* 次文字 */
-    --border: rgba(212, 175, 55, 0.3); /* 金色邊框 */
+    --border: rgba(245, 196, 81, 0.3); /* 邊框 */
     --bg-card: rgba(255, 255, 255, 0.05); /* 卡片背景 */
+}
+
+/* 換色：body 掛上 data-theme 就覆蓋上面的變數 */
+body[data-theme="ocean"] {   /* 海洋藍 */
+    --bg1: #0a1e33; 
+    --bg2: #12304f; 
+    --bg3: #1a4a70;
+    --gold: #4fc3f7; 
+    --gold-soft: #9fdcff;
+    --border: rgba(79, 195, 247, 0.3);
+    --text-secondary: #a0c2e2;
+}
+body[data-theme="forest"] {  /* 森林綠 */
+    --bg1: #0d1f16; 
+    --bg2: #163524; 
+    --bg3: #1f4a30;
+    --gold: #5bd18a; 
+    --gold-soft: #9fe6b8;
+    --border: rgba(91, 209, 138, 0.3);
+    --text-secondary: #9fc7b0;
+}
+body[data-theme="sunset"] {  /* 夕陽橙 */
+    --bg1: #2a1410; 
+    --bg2: #4a2418; 
+    --bg3: #6a2f1a;
+    --gold: #ff9d5c; 
+    --gold-soft: #ffc79f;
+    --border: rgba(255, 157, 92, 0.3);
+    --text-secondary: #e6b2a0;
 }
 
 /* 全局重置 */
@@ -742,4 +778,241 @@ html, body {
     border-top: 1px dashed rgba(212, 175, 55, 0.2);
     padding-top: 8px;
     margin-top: 8px;
+}
+
+/* ===== Password Gate ===== */
+.password-gate {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.password-gate.hidden {
+    opacity: 0;
+    transform: scale(1.05);
+    pointer-events: none;
+}
+
+.gate-box {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 24px;
+    padding: 50px 45px;
+    width: 90%;
+    max-width: 440px;
+    text-align: center;
+    animation: gateIn 0.8s ease;
+}
+
+@keyframes gateIn {
+    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.gate-logo {
+    font-size: 64px;
+    margin-bottom: 10px;
+    animation: gateFloat 3s ease-in-out infinite;
+}
+
+@keyframes gateFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
+
+.gate-title {
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.gate-subtitle {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.gate-disclaimer {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.3);
+    margin-bottom: 24px;
+}
+
+.gate-input-wrap {
+    position: relative;
+    margin-bottom: 18px;
+}
+
+.gate-input {
+    width: 100%;
+    padding: 14px 50px 14px 20px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 16px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.gate-input:focus {
+    border-color: #f5c451;
+    box-shadow: 0 0 0 3px #f5c45133;
+}
+
+.gate-input::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.gate-toggle-pw {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px;
+}
+
+.gate-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(135deg, #f5c451, #f7d98a);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px #f5c45140;
+}
+
+.gate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px #f5c45150;
+}
+
+.gate-error {
+    color: #ff6b6b;
+    font-size: 14px;
+    margin-top: 12px;
+    min-height: 20px;
+}
+
+.gate-admin-toggle {
+    margin-top: 24px;
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 13px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    user-select: none;
+}
+
+.gate-admin-toggle:hover {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+
+.admin-panel {
+    display: none;
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: left;
+}
+
+.admin-panel.show { display: block; }
+
+.admin-panel h4 {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.admin-pw-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 120px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+}
+
+.admin-pw-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    font-family: 'Courier New', monospace;
+}
+
+.admin-pw-list li:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.admin-pw-list li button {
+    background: rgba(255, 80, 80, 0.3);
+    border: none;
+    color: #ff6b6b;
+    padding: 2px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.admin-add-row {
+    display: flex;
+    gap: 8px;
+}
+
+.admin-add-row input {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+}
+
+.admin-add-row button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, #f5c451, #f7d98a);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.admin-msg {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
+    margin-top: 8px;
+    min-height: 16px;
 }
