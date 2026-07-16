@@ -50,24 +50,6 @@ const cfg = {
     theme: 'purple'
 };
 
-// 套用背景風格主題
-function applyTheme(t) {
-    document.body.dataset.theme = t || 'purple';
-}
-
-// 從 LocalStorage 載入使用者設定
-try {
-    const savedCfg = localStorage.getItem('translator_cfg');
-    if (savedCfg) {
-        Object.assign(cfg, JSON.parse(savedCfg));
-    }
-} catch (e) {
-    console.warn('載入設定失敗:', e);
-}
-
-// 開機套用上次儲存的主題
-applyTheme(cfg.theme);
-
 const BCP = {
     'zh-TW': 'zh-TW',
     'en': 'en-US',
@@ -402,96 +384,8 @@ function setupEventListeners() {
     }
     
     // === 設定彈窗控制邏輯 ===
-    const settingsBtn = document.getElementById('settingsBtn');
-    const settingsModal = document.getElementById('settingsModal');
-    const closeBtn = settingsModal ? settingsModal.querySelector('.close-btn') : null;
-    const saveSettings = document.getElementById('saveSettings');
-    
-    const cfgGeminiKey = document.getElementById('cfgGeminiKey');
-    const cfgOwmKey = document.getElementById('cfgOwmKey');
-    const cfgTavilyKey = document.getElementById('cfgTavilyKey');
-    const cfgAutoSpeak = document.getElementById('cfgAutoSpeak');
-    const cfgRate = document.getElementById('cfgRate');
-    const cfgRateVal = document.getElementById('cfgRateVal');
-    const cfgTheme = document.getElementById('cfgTheme');
-
-    if (settingsBtn && settingsModal) {
-        // 開啟設定
-        settingsBtn.onclick = () => {
-            if (cfgGeminiKey) cfgGeminiKey.value = cfg.geminikey || '';
-            if (cfgOwmKey) cfgOwmKey.value = cfg.owmkey || '';
-            if (cfgTavilyKey) cfgTavilyKey.value = cfg.tavilykey || '';
-            if (cfgAutoSpeak) cfgAutoSpeak.checked = cfg.autospeak;
-            if (cfgTheme) cfgTheme.value = cfg.theme || 'purple';
-            if (cfgRate) {
-                cfgRate.value = cfg.rate;
-                if (cfgRateVal) cfgRateVal.textContent = parseFloat(cfg.rate).toFixed(1);
-            }
-            history.pushState({ modal: 'settings' }, '');
-            settingsModal.style.display = 'flex';
-        };
-
-        const closeSettings = () => {
-            applyTheme(cfg.theme); // 還原成已儲存的主題（撤銷即時預覽）
-            settingsModal.style.display = 'none';
-            if (history.state && history.state.modal === 'settings') {
-                history.back();
-            }
-        };
-
-        // 關閉設定 (點叉叉)
-        if (closeBtn) {
-            closeBtn.onclick = closeSettings;
-        }
-
-        // 點擊彈窗外部關閉
-        window.addEventListener('click', (e) => {
-            if (e.target === settingsModal) {
-                closeSettings();
-            }
-        });
-
-        // 選擇主題時即時套用預覽
-        if (cfgTheme) {
-            cfgTheme.addEventListener('change', () => {
-                applyTheme(cfgTheme.value);
-            });
-        }
-
-        // 速度拉桿連動
-        if (cfgRate && cfgRateVal) {
-            cfgRate.oninput = (e) => {
-                cfgRateVal.textContent = parseFloat(e.target.value).toFixed(1);
-            };
-        }
-
-        // 儲存設定
-        if (saveSettings) {
-            saveSettings.onclick = () => {
-                if (cfgGeminiKey) cfg.geminikey = cfgGeminiKey.value.trim();
-                if (cfgOwmKey) cfg.owmkey = cfgOwmKey.value.trim();
-                if (cfgTavilyKey) cfg.tavilykey = cfgTavilyKey.value.trim();
-                if (cfgAutoSpeak) cfg.autospeak = cfgAutoSpeak.checked;
-                if (cfgRate) cfg.rate = parseFloat(cfgRate.value) || 1.0;
-                if (cfgTheme) cfg.theme = cfgTheme.value;
-
-                applyTheme(cfg.theme); // 儲存並套用
-
-                try {
-                    localStorage.setItem('translator_cfg', JSON.stringify(cfg));
-                    console.log('設定已儲存:', cfg);
-                } catch (e) {
-                    console.error('儲存設定失敗:', e);
-                }
-
-                settingsModal.style.display = 'none';
-                if (history.state && history.state.modal === 'settings') {
-                    history.back();
-                }
-                toast('設定已儲存！');
-            };
-        }
-    }
+    // === 設定彈窗控制邏輯 ===
+    initSettingsEvents();
     
     // 文字輸入 - 更新字數
     const inputText = document.getElementById('inputText');
@@ -687,6 +581,139 @@ function playLiveAudio(data) {
 
 async function convertSimplifiedToTraditional(text) {
     return toTraditional(text);
+}
+
+
+// ===== 9. 設定面板 / 密碼 / 換風格 =====
+
+// 步驟一：設定資料庫讀寫與預設值
+const DEFAULT_CFG = {
+    autospeak: true,
+    rate: 1.0,
+    geminikey: '',
+    tavilykey: '',
+    owmkey: '',
+    s_langA: 'zh-TW',
+    s_langB: 'en',
+    theme: 'purple'
+};
+
+function loadCfg() {
+    try {
+        return { ...DEFAULT_CFG, ...JSON.parse(localStorage.getItem('translator_cfg') || '{}') };
+    } catch(e) {
+        return { ...DEFAULT_CFG };
+    }
+}
+
+function saveCfg(c) {
+    try {
+        localStorage.setItem('translator_cfg', JSON.stringify(c));
+    } catch(e) {
+        console.error('儲存設定失敗:', e);
+    }
+}
+
+// 覆蓋全域 cfg 的預設載入與設定
+Object.assign(cfg, loadCfg());
+
+// 步驟三：打開設定與儲存邏輯
+function openSettings() {
+    const cfgGeminiKey = document.getElementById('cfgGeminiKey');
+    const cfgOwmKey = document.getElementById('cfgOwmKey');
+    const cfgTavilyKey = document.getElementById('cfgTavilyKey');
+    const cfgAutoSpeak = document.getElementById('cfgAutoSpeak');
+    const cfgRate = document.getElementById('cfgRate');
+    const cfgRateVal = document.getElementById('cfgRateVal');
+    const cfgTheme = document.getElementById('cfgTheme');
+    const settingsModal = document.getElementById('settingsModal');
+
+    if (cfgGeminiKey) cfgGeminiKey.value = cfg.geminikey || '';
+    if (cfgOwmKey) cfgOwmKey.value = cfg.owmkey || '';
+    if (cfgTavilyKey) cfgTavilyKey.value = cfg.tavilykey || '';
+    if (cfgAutoSpeak) cfgAutoSpeak.checked = cfg.autospeak;
+    if (cfgTheme) cfgTheme.value = cfg.theme || 'purple';
+    if (cfgRate) {
+        cfgRate.value = cfg.rate;
+        if (cfgRateVal) cfgRateVal.textContent = parseFloat(cfg.rate).toFixed(1);
+    }
+    
+    history.pushState({ modal: 'settings' }, '');
+    if (settingsModal) settingsModal.style.display = 'flex';
+}
+
+function saveSettingsLogic() {
+    const cfgGeminiKey = document.getElementById('cfgGeminiKey');
+    const cfgOwmKey = document.getElementById('cfgOwmKey');
+    const cfgTavilyKey = document.getElementById('cfgTavilyKey');
+    const cfgAutoSpeak = document.getElementById('cfgAutoSpeak');
+    const cfgRate = document.getElementById('cfgRate');
+    const cfgTheme = document.getElementById('cfgTheme');
+    const settingsModal = document.getElementById('settingsModal');
+
+    if (cfgGeminiKey) cfg.geminikey = cfgGeminiKey.value.trim();
+    if (cfgOwmKey) cfg.owmkey = cfgOwmKey.value.trim();
+    if (cfgTavilyKey) cfg.tavilykey = cfgTavilyKey.value.trim();
+    if (cfgAutoSpeak) cfg.autospeak = cfgAutoSpeak.checked;
+    if (cfgRate) cfg.rate = parseFloat(cfgRate.value) || 1.0;
+    if (cfgTheme) cfg.theme = cfgTheme.value;
+
+    applyTheme(cfg.theme); // 步驟五
+    saveCfg(cfg);          // 步驟一
+
+    if (settingsModal) {
+        settingsModal.style.display = 'none';
+    }
+    if (history.state && history.state.modal === 'settings') {
+        history.back();
+    }
+    toast('設定已儲存！');
+}
+
+// 步驟五：讓下拉選單真的換色
+function applyTheme(t) {
+    document.body.dataset.theme = t || 'purple';
+}
+
+function initSettingsEvents() {
+    const settingsBtn = document.getElementById('settingsBtn');
+    const saveSettings = document.getElementById('saveSettings');
+    const settingsModal = document.getElementById('settingsModal');
+    const closeBtn = settingsModal ? settingsModal.querySelector('.close-btn') : null;
+    const cfgTheme = document.getElementById('cfgTheme');
+    const cfgRate = document.getElementById('cfgRate');
+    const cfgRateVal = document.getElementById('cfgRateVal');
+
+    if (settingsBtn) settingsBtn.onclick = openSettings;
+    if (saveSettings) saveSettings.onclick = saveSettingsLogic;
+
+    const closeSettings = () => {
+        applyTheme(cfg.theme); // 還原成已儲存的主題（撤銷即時預覽）
+        if (settingsModal) settingsModal.style.display = 'none';
+        if (history.state && history.state.modal === 'settings') {
+            history.back();
+        }
+    };
+
+    if (closeBtn) closeBtn.onclick = closeSettings;
+    window.addEventListener('click', (e) => {
+        if (e.target === settingsModal) closeSettings();
+    });
+
+    if (cfgTheme) {
+        cfgTheme.addEventListener('change', () => {
+            applyTheme(cfgTheme.value);
+        });
+    }
+
+    if (cfgRate && cfgRateVal) {
+        cfgRate.oninput = (e) => {
+            cfgRateVal.textContent = parseFloat(e.target.value).toFixed(1);
+        };
+    }
+
+    // 開機時套用已儲存的主題配色
+    applyTheme(cfg.theme);
 }
 
 
