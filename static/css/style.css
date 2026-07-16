@@ -345,6 +345,8 @@ html, body {
     border-radius: 20px;
     width: 90%;
     max-width: 420px;
+    max-height: 85vh;
+    overflow-y: auto;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
     position: relative;
     color: var(--text-primary);
