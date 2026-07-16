@@ -220,7 +220,7 @@ const LANGS = [
     { id: 'zh-TW', label: '繁體中文' },
     { id: 'en', label: 'English' },
     { id: 'ja', label: '日本語' },
-    { id: 'ko', label: '한국어' },
+    { id: 'ko', label: '韓國語' },
     { id: 'vi', label: 'Tiếng Việt' },
     { id: 'de', label: 'Deutsch' },
 ];
@@ -799,7 +799,7 @@ function makeFaceSide(langSelId, resultBoxId, micBtnId, getTargetId) {
 let recTop = null, recBottom = null;
 
 // ===== 7. 拍照 / 檔案 =====
-def providerBody() {
+function providerBody() {
     return {
         provider: 'gemini',
         base_url: '',
@@ -809,7 +809,7 @@ def providerBody() {
 }
 
 // 相機影像 client 端縮圖：省流量、加速雲端辨識（Gemini 最佳邊長約 1568px）
-def fileToDownscaledDataURL(file, maxDim = 1568, quality = 0.85) {
+function fileToDownscaledDataURL(file, maxDim = 1568, quality = 0.85) {
     return new Promise((resolve, reject) => {
         const img = new Image();
         const url = URL.createObjectURL(file);
@@ -826,7 +826,7 @@ def fileToDownscaledDataURL(file, maxDim = 1568, quality = 0.85) {
         img.src = url;
     });
 }
-def dataURLToBlob(dataURL) {
+function dataURLToBlob(dataURL) {
     const [head, b64] = dataURL.split(',');
     const mime = (head.match(/data:(.*?);/) || [, 'image/jpeg'])[1];
     const bin = atob(b64);
@@ -977,9 +977,7 @@ function initFaceMode() {
     }
 }
 
-/* =========================================================
-   8. 匯率換算（免金鑰：後端代理 ER-API / Frankfurter）
-   ========================================================= */
+// ===== 8. 匯率 / 天氣 / 助手 =====
 const CURRENCIES = [
     { code: 'TWD', label: 'TWD 台幣' },
     { code: 'USD', label: 'USD 美元' },
