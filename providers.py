@@ -78,6 +78,17 @@ def translate_openai(base_url: str, api_key: str, model: str, system: str, text:
     return data["choices"][0]["message"]["content"].strip()
 
 
+def generate(provider: str, api_key: str, model: str, base_url: str, system: str, user: str) -> str:
+    """通用單輪生成（system + user → text），依 provider 分派。供旅遊問答等使用。"""
+    provider = (provider or "gemini").lower()
+    if provider == "openai":
+        return translate_openai(base_url, api_key, model, system, user, timeout=45)
+    if model and not model.startswith("gemini"):
+        model = ""
+    return translate_gemini(api_key, model, system, user)
+
+
+
 def translate(data: dict) -> dict:
     """
     主入口。data 需含：
@@ -205,7 +216,7 @@ def _analyze_gemini(api_key: str, model: str, system: str,
             temperature=0.3,
             response_mime_type="application/json",
             max_output_tokens=8192,
-            # 關閉 thinking：OCR/摘要/翻譯不需推理，且能避免思考 token 吃掉輸出額度導致 JSON 被截斷
+            # 關閉 thinking：OCR/摘要/翻譯不需推理，且能避免思考 token eat 掉輸出額度導致 JSON 被截斷
             thinking_config=types.ThinkingConfig(thinking_budget=0),
         ),
     )

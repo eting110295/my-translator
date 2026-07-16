@@ -523,6 +523,76 @@ def api_weather():
         return jsonify({"ok": False, "error": f"天氣查詢失敗：{type(e).__name__}"}), 400
 
 
+# ===== 8. 旅遊問答 API =====
+def _tavily_search(key, query, max_results=5):
+    r = requests.post("https://api.tavily.com/search", json={
+        "api_key": key, "query": query, "max_results": max_results,
+        "include_answer": True, "search_depth": "basic",
+    }, timeout=20)
+    r.raise_for_status()
+    return r.json()
+
+
+@app.route('/api/ask', methods=['POST'])
+def api_ask():
+    data = request.get_json(force=True, silent=True) or {}
+    question = (data.get('question') or '').strip()
+    if not question:
+        return jsonify({"ok": False, "error": "請輸入問題"}), 400
+    target = data.get('target') or 'Traditional Chinese (Taiwan)'
+    pc = _provider_cfg(data)
+    tavily_key = (data.get('tavily_key') or os.getenv('TAVILY_API_KEY') or '').strip()
+
+    # 1) 有 Tavily 金鑰才上網查；失敗或額度爆掉就略過，改用 AI 自身知識
+    context, sources, searched, search_note = "", [], False, ""
+    if tavily_key:
+        try:
+            d = _tavily_search(tavily_key, question)
+            results = d.get("results") or []
+            if d.get("answer"):
+                context += f"Web summary: {d['answer']}\n"
+            for it in results:
+                context += f"- {it.get('title','')}: {it.get('content','')}\n"
+                sources.append({"title": it.get("title", ""), "url": it.get("url", "")})
+            searched = bool(results or d.get("answer"))
+        except Exception as e:
+            logger.warning(f"tavily failed: {e}")
+            search_note = "（即時搜尋暫時無法使用，改用 AI 既有知識回答）"
+
+    # 2) 交給 LLM 回答（走設定的供應商）
+    system = (
+        "You are a helpful, concise travel assistant. "
+        f"Answer the user's question in {target}. "
+        "If web search context is provided, prefer those up-to-date facts and be specific; "
+        "otherwise answer from your own knowledge and flag uncertainty for time-sensitive details. "
+        "Use short paragraphs or bullet points when helpful."
+    )
+    user = question if not context else f"Question: {question}\n\nWeb search context:\n{context}"
+    try:
+        if pc['provider'] == 'openai':
+            if not pc['api_key']:
+                return jsonify({"ok": False, "error": "OpenAI 相容供應商需要 API Key（請到設定填入）"}), 400
+            answer = providers.generate('openai', pc['api_key'], pc['model'], pc['base_url'], system, user)
+        else:
+            key = pc['api_key'] or API_KEY
+            if not key:
+                return jsonify({"ok": False, "error": "找不到 Gemini API Key"}), 400
+            answer = providers.generate('gemini', key, pc['model'], '', system, user)
+    except requests.HTTPError as e:
+        body = ''
+        try:
+            body = e.response.text[:300]
+        except Exception:
+            pass
+        return jsonify({"ok": False, "error": f"HTTP {e.response.status_code if e.response else '?'}: {body}"}), 400
+    except Exception as e:
+        logger.error(f"ask error: {e}")
+        return jsonify({"ok": False, "error": f"{type(e).__name__}: {e}"}), 400
+
+    return jsonify({"ok": True, "answer": (answer or "") + (("\n\n" + search_note) if search_note else ""),
+                    "sources": sources, "searched": searched})
+
+
 if __name__ == '__main__':
     debug_mode = os.getenv('FLASK_DEBUG', 'True').lower() in ('1', 'true', 'yes')
     socketio.run(

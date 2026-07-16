@@ -43,7 +43,10 @@ let langA, langB, result;
 const cfg = {
     autospeak: true,
     rate: 1,
-    geminikey: ''
+    geminikey: '',
+    tavilykey: '',
+    s_langA: 'zh-TW',
+    s_langB: 'en'
 };
 
 // 從 LocalStorage 載入使用者設定
@@ -369,8 +372,8 @@ function setupEventListeners() {
     langB = document.getElementById('langB');
     result = document.getElementById('result');
     
-    if (langA) fill(langA, 'zh-TW');
-    if (langB) fill(langB, 'en');
+    if (langA) fill(langA, cfg.s_langA || 'zh-TW');
+    if (langB) fill(langB, cfg.s_langB || 'en');
     
     // === 設定彈窗控制邏輯 ===
     const settingsBtn = document.getElementById('settingsBtn');
@@ -380,6 +383,7 @@ function setupEventListeners() {
     
     const cfgGeminiKey = document.getElementById('cfgGeminiKey');
     const cfgOwmKey = document.getElementById('cfgOwmKey');
+    const cfgTavilyKey = document.getElementById('cfgTavilyKey');
     const cfgAutoSpeak = document.getElementById('cfgAutoSpeak');
     const cfgRate = document.getElementById('cfgRate');
     const cfgRateVal = document.getElementById('cfgRateVal');
@@ -389,6 +393,7 @@ function setupEventListeners() {
         settingsBtn.onclick = () => {
             if (cfgGeminiKey) cfgGeminiKey.value = cfg.geminikey || '';
             if (cfgOwmKey) cfgOwmKey.value = cfg.owmkey || '';
+            if (cfgTavilyKey) cfgTavilyKey.value = cfg.tavilykey || '';
             if (cfgAutoSpeak) cfgAutoSpeak.checked = cfg.autospeak;
             if (cfgRate) {
                 cfgRate.value = cfg.rate;
@@ -430,6 +435,7 @@ function setupEventListeners() {
             saveSettings.onclick = () => {
                 if (cfgGeminiKey) cfg.geminikey = cfgGeminiKey.value.trim();
                 if (cfgOwmKey) cfg.owmkey = cfgOwmKey.value.trim();
+                if (cfgTavilyKey) cfg.tavilykey = cfgTavilyKey.value.trim();
                 if (cfgAutoSpeak) cfg.autospeak = cfgAutoSpeak.checked;
                 if (cfgRate) cfg.rate = parseFloat(cfgRate.value) || 1.0;
 
@@ -465,7 +471,23 @@ function setupEventListeners() {
         const a = langA.value; 
         langA.value = langB.value; 
         langB.value = a;
+        cfg.s_langA = langA.value;
+        cfg.s_langB = langB.value;
+        try { localStorage.setItem('translator_cfg', JSON.stringify(cfg)); } catch(e){}
     };
+
+    if (langA) {
+        langA.addEventListener('change', () => {
+            cfg.s_langA = langA.value;
+            try { localStorage.setItem('translator_cfg', JSON.stringify(cfg)); } catch(e){}
+        });
+    }
+    if (langB) {
+        langB.addEventListener('change', () => {
+            cfg.s_langB = langB.value;
+            try { localStorage.setItem('translator_cfg', JSON.stringify(cfg)); } catch(e){}
+        });
+    }
     
     // 翻譯鈕 - 呼叫後端翻譯 API
     const ttsBtn = document.getElementById('ttsBtn');
@@ -1142,6 +1164,70 @@ const closeWeather = () => {
 if ($('wx_close')) $('wx_close').addEventListener('click', closeWeather);
 if ($('wx_close_x')) $('wx_close_x').addEventListener('click', closeWeather);
 
+/* =========================================================
+   旅遊助手問答（可選 Tavily 上網 + 設定的供應商）
+   ========================================================= */
+let lastAskText = '';
+let askSpeaking = false;
+function setAskSpeakBtn(on) { askSpeaking = on; $('ask_speak').textContent = on ? '⏹ 停止' : '🔊 朗讀'; }
+async function doAsk() {
+    const q = $('ask_q').value.trim();
+    if (!q) { $('ask_status').textContent = '請輸入問題'; return; }
+    $('ask_answer').classList.add('hidden');
+    $('ask_sources').innerHTML = '';
+    $('ask_status').textContent = (cfg.tavilykey ? '上網查詢並' : 'AI ') + '思考中…';
+    try {
+        const res = await fetch('/api/ask', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                question: q,
+                target: byId(cfg.s_langA || 'zh-TW').name,      // 用你的語言回答
+                tavily_key: cfg.tavilykey || '',
+                ...providerBody(),
+            }),
+        });
+        const d = await res.json();
+        if (!d.ok) throw new Error(d.error || '查詢失敗');
+        $('ask_status').textContent = d.searched ? '🌐 已參考即時搜尋' : '';
+        $('ask_answer').textContent = d.answer || '（無回覆）';
+        $('ask_answer').classList.remove('hidden');
+        lastAskText = d.answer || '';
+        if (Array.isArray(d.sources) && d.sources.length) {
+            $('ask_sources').innerHTML = '<div class="src-title">來源</div>' + d.sources.map(s =>
+                `<a href="${s.url}" target="_blank" rel="noopener">${escapeHtml(s.title || s.url)}</a>`
+            ).join('');
+        }
+        if (q && lastAskText) pushHistory('（助手）' + q, lastAskText);
+    } catch (e) { $('ask_status').textContent = '❌ ' + e.message; toast(e.message); }
+}
+if ($('s_ask')) {
+    $('s_ask').addEventListener('click', () => {
+        setAskSpeakBtn(false);
+        history.pushState({ modal: 'ask' }, '');
+        $('askModal').classList.remove('hidden');
+    });
+}
+if ($('ask_go')) $('ask_go').addEventListener('click', doAsk);
+if ($('ask_speak')) {
+    $('ask_speak').addEventListener('click', () => {
+        if (askSpeaking) { stopAllAudio(); return; }
+        if (!lastAskText) { toast('沒有可朗讀的內容'); return; }
+        ensureAudioUnlocked();
+        setAskSpeakBtn(true);
+        speak(lastAskText, byId(cfg.s_langA || 'zh-TW').bcp, true, () => setAskSpeakBtn(false));
+    });
+}
+const closeAsk = () => {
+    stopAllAudio();
+    setAskSpeakBtn(false);
+    $('askModal').classList.add('hidden');
+    if (history.state && history.state.modal === 'ask') {
+        history.back();
+    }
+};
+if ($('ask_close')) $('ask_close').addEventListener('click', closeAsk);
+if ($('ask_close_x')) $('ask_close_x').addEventListener('click', closeAsk);
+
 // --- 歷史記錄狀態管理以支援手機返回鍵關閉彈窗 ---
 window.addEventListener('popstate', (e) => {
     // 當使用者按下手機返回鍵時，自動關閉所有開啟的彈窗而非離開網頁
@@ -1161,5 +1247,11 @@ window.addEventListener('popstate', (e) => {
     const weatherModal = $('weatherModal');
     if (weatherModal && !weatherModal.classList.contains('hidden')) {
         weatherModal.classList.add('hidden');
+    }
+    const askModal = $('askModal');
+    if (askModal && !askModal.classList.contains('hidden')) {
+        stopAllAudio();
+        setAskSpeakBtn(false);
+        askModal.classList.add('hidden');
     }
 });
