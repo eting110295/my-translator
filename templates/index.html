@@ -15,6 +15,7 @@
         <header class="topbar">
             <button id="modeBtn" class="mode-btn" title="切換模式">👤 單人</button>
             <h1>Sweety 即時翻譯 <span id="statusDot" class="status-dot"></span></h1>
+            <button id="s_weather" class="tool-btn" style="right: 100px;" title="天氣">🌤️</button>
             <button id="s_currency" class="tool-btn" title="匯率">💱</button>
             <button id="settingsBtn" class="settings-btn" title="設定">⚙️</button>
         </header>
@@ -121,6 +122,10 @@
                 <input type="password" id="cfgGeminiKey" placeholder="請輸入 API 金鑰，留空則使用伺服器金鑰">
             </div>
             <div class="form-group">
+                <label for="cfgOwmKey">OpenWeatherMap API 金鑰 (選填)：</label>
+                <input type="password" id="cfgOwmKey" placeholder="請輸入天氣 API 金鑰，留空則使用免金鑰">
+            </div>
+            <div class="form-group">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
                     <input type="checkbox" id="cfgAutoSpeak"> 翻譯後自動語音朗讀
                 </label>
@@ -191,6 +196,22 @@
                 <button id="cur_convert" class="save-btn" style="flex: 1; margin-top: 0;">換算</button>
                 <button id="cur_close" class="save-btn" style="flex: 1; margin-top: 0; background: #555;">關閉</button>
             </div>
+        </div>
+    </div>
+
+    <!-- 天氣查詢彈窗 -->
+    <div class="modal hidden" id="weatherModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span id="wx_close_x" class="close-btn">&times;</span>
+            <h2>🌤️ 天氣查詢</h2>
+            <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 12px;">
+                <input type="text" id="wx_place" placeholder="例如：那霸、東京、台北…" style="flex: 1;">
+                <button class="save-btn" id="wx_go" style="margin-top: 0; width: auto; padding: 0 20px; background: var(--accent); color: #1a0f2e;">查詢</button>
+            </div>
+            <button class="save-btn" id="wx_geo" style="background: var(--primary-light); color: var(--text-primary); border: 1px solid var(--border); margin-top: 5px;">📍 用目前位置</button>
+            <div id="wx_result" class="wx-result hidden" style="margin-top: 15px; text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid var(--border);"></div>
+            <div id="wx_status" class="hint" style="margin-top: 10px; text-align: center; color: var(--text-secondary);"></div>
+            <button id="wx_close" class="save-btn" style="background: #555; margin-top: 15px;">關閉</button>
         </div>
     </div>
 

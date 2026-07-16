@@ -379,6 +379,7 @@ function setupEventListeners() {
     const saveSettings = document.getElementById('saveSettings');
     
     const cfgGeminiKey = document.getElementById('cfgGeminiKey');
+    const cfgOwmKey = document.getElementById('cfgOwmKey');
     const cfgAutoSpeak = document.getElementById('cfgAutoSpeak');
     const cfgRate = document.getElementById('cfgRate');
     const cfgRateVal = document.getElementById('cfgRateVal');
@@ -387,6 +388,7 @@ function setupEventListeners() {
         // 開啟設定
         settingsBtn.onclick = () => {
             if (cfgGeminiKey) cfgGeminiKey.value = cfg.geminikey || '';
+            if (cfgOwmKey) cfgOwmKey.value = cfg.owmkey || '';
             if (cfgAutoSpeak) cfgAutoSpeak.checked = cfg.autospeak;
             if (cfgRate) {
                 cfgRate.value = cfg.rate;
@@ -427,6 +429,7 @@ function setupEventListeners() {
         if (saveSettings) {
             saveSettings.onclick = () => {
                 if (cfgGeminiKey) cfg.geminikey = cfgGeminiKey.value.trim();
+                if (cfgOwmKey) cfg.owmkey = cfgOwmKey.value.trim();
                 if (cfgAutoSpeak) cfg.autospeak = cfgAutoSpeak.checked;
                 if (cfgRate) cfg.rate = parseFloat(cfgRate.value) || 1.0;
 
@@ -1062,6 +1065,83 @@ if ($('cur_to')) $('cur_to').addEventListener('change', () => { persistCur(); do
 if ($('cur_amount')) $('cur_amount').addEventListener('input', () => { persistCur(); scheduleConvert(); });
 if ($('cur_convert')) $('cur_convert').addEventListener('click', doConvert);
 
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#039;');
+}
+
+/* =========================================================
+   天氣（Open-Meteo，免金鑰；填了 OWM 金鑰後端可改用 OpenWeatherMap）
+   ========================================================= */
+async function fetchWeather(payload) {
+    $('wx_result').classList.add('hidden');
+    $('wx_status').textContent = '查詢中…';
+    try {
+        const res = await fetch('/api/weather', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...payload, owm_key: cfg.owmkey || '' }),
+        });
+        const d = await res.json();
+        if (!d.ok) throw new Error(d.error || '查詢失敗');
+        const rows = [
+            `<div class="wx-place">${escapeHtml(d.place)}</div>`,
+            `<div class="wx-temp">${Math.round(d.temp)}°C　${escapeHtml(d.desc)}</div>`,
+            `<div class="wx-sub">體感 ${Math.round(d.feels)}°C · 濕度 ${d.humidity}%` +
+                (d.hi != null ? ` · 高${Math.round(d.hi)}° 低${Math.round(d.lo)}°` : '') +
+                (d.pop != null ? ` · 降雨 ${d.pop}%` : '') + `</div>`,
+            `<div class="wx-advice">${escapeHtml(d.advice)}</div>`,
+        ];
+        $('wx_result').innerHTML = rows.join('');
+        $('wx_result').classList.remove('hidden');
+        $('wx_status').textContent = '';
+    } catch (e) { $('wx_status').textContent = '❌ ' + e.message; }
+}
+
+if ($('s_weather')) {
+    $('s_weather').addEventListener('click', () => {
+        $('wx_place').value = cfg.wx_place || '';
+        $('wx_result').classList.add('hidden');
+        $('wx_status').textContent = '';
+        history.pushState({ modal: 'weather' }, '');
+        $('weatherModal').classList.remove('hidden');
+        if (cfg.wx_place) fetchWeather({ place: cfg.wx_place });
+    });
+}
+if ($('wx_go')) {
+    $('wx_go').addEventListener('click', () => {
+        const p = $('wx_place').value.trim();
+        if (!p) { $('wx_status').textContent = '請輸入地點'; return; }
+        cfg.wx_place = p;
+        try { localStorage.setItem('translator_cfg', JSON.stringify(cfg)); } catch(e){}
+        fetchWeather({ place: p });
+    });
+}
+if ($('wx_place')) {
+    $('wx_place').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('wx_go').click(); });
+}
+if ($('wx_geo')) {
+    $('wx_geo').addEventListener('click', () => {
+        if (!navigator.geolocation) { $('wx_status').textContent = '此裝置不支援定位'; return; }
+        $('wx_status').textContent = '定位中…';
+        navigator.geolocation.getCurrentPosition(
+            (pos) => fetchWeather({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+            () => { $('wx_status').textContent = '無法取得位置（請允許定位權限）'; }
+        );
+    });
+}
+const closeWeather = () => {
+    $('weatherModal').classList.add('hidden');
+    if (history.state && history.state.modal === 'weather') {
+        history.back();
+    }
+};
+if ($('wx_close')) $('wx_close').addEventListener('click', closeWeather);
+if ($('wx_close_x')) $('wx_close_x').addEventListener('click', closeWeather);
+
 // --- 歷史記錄狀態管理以支援手機返回鍵關閉彈窗 ---
 window.addEventListener('popstate', (e) => {
     // 當使用者按下手機返回鍵時，自動關閉所有開啟的彈窗而非離開網頁
@@ -1077,5 +1157,9 @@ window.addEventListener('popstate', (e) => {
     const currencyModal = $('currencyModal');
     if (currencyModal && !currencyModal.classList.contains('hidden')) {
         currencyModal.classList.add('hidden');
+    }
+    const weatherModal = $('weatherModal');
+    if (weatherModal && !weatherModal.classList.contains('hidden')) {
+        weatherModal.classList.add('hidden');
     }
 });

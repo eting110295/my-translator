@@ -671,3 +671,30 @@ html, body {
     text-align: center;
     margin-bottom: 20px;
 }
+
+/* ============ 天氣查詢樣式 ============ */
+.wx-place {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--accent);
+    margin-bottom: 5px;
+}
+.wx-temp {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+.wx-sub {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+.wx-advice {
+    font-size: 0.95rem;
+    color: var(--accent-light);
+    font-weight: 500;
+    border-top: 1px dashed rgba(212, 175, 55, 0.2);
+    padding-top: 8px;
+    margin-top: 8px;
+}

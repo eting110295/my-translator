@@ -96,32 +96,142 @@ def api_tts():
     return jsonify({'error': last_err}), 400
 
 
-# ===== 4. 天氣查詢 API (備用測試，免金鑰) =====
+# ===== 4. 天氣查詢 API (Open-Meteo，免金鑰；備用支援 OpenWeatherMap) =====
+WMO_CODES = {
+    0: "晴天 ☀️", 1: "大致晴朗 🌤️", 2: "部分多雲 ⛅", 3: "陰天 ☁️",
+    45: "有霧 🌫️", 48: "凍霧 🌫️",
+    51: "毛毛雨 🌦️", 53: "毛毛雨 🌦️", 55: "毛毛雨 🌦️",
+    56: "凍雨 🌧️", 57: "凍雨 🌧️",
+    61: "小雨 🌧️", 63: "中雨 🌧️", 65: "大雨 🌧️",
+    66: "凍雨 🌧️", 67: "凍雨 🌧️",
+    71: "小雪 🌨️", 73: "中雪 🌨️", 75: "大雪 🌨️", 77: "雪珠 🌨️",
+    80: "陣雨 🌦️", 81: "陣雨 🌧️", 82: "強陣雨 ⛈️",
+    85: "陣雪 🌨️", 86: "強陣雪 🌨️",
+    95: "雷陣雨 ⛈️", 96: "雷雨伴冰雹 ⛈️", 99: "強雷雨冰雹 ⛈️",
+}
+
+COMMON_PLACES = {
+    "台北": (25.033, 121.565, "台北，台灣"), "臺北": (25.033, 121.565, "台北，台灣"),
+    "台中": (24.147, 120.673, "台中，台灣"), "台南": (22.999, 120.227, "台南，台灣"),
+    "高雄": (22.627, 120.301, "高雄，台灣"), "花蓮": (23.991, 121.601, "花蓮，台灣"),
+    "台東": (22.758, 121.144, "台東，台灣"), "墾丁": (21.947, 120.798, "墾丁，台灣"),
+    "東京": (35.690, 139.692, "東京，日本"), "大阪": (34.694, 135.502, "大阪，日本"),
+    "京都": (35.011, 135.768, "京都，日本"), "名古屋": (35.182, 136.906, "名古屋，日本"),
+    "福岡": (33.590, 130.402, "福岡，日本"), "札幌": (43.062, 141.354, "札幌，日本"),
+    "北海道": (43.062, 141.354, "北海道，日本"), "沖繩": (26.212, 127.681, "沖繩，日本"),
+    "那霸": (26.212, 127.681, "那霸，日本"), "首爾": (37.567, 126.978, "首爾，韓國"),
+    "釜山": (35.180, 129.075, "釜山，韓國"), "曼谷": (13.756, 100.502, "曼谷，泰國"),
+    "清邁": (18.788, 98.985, "清邁，泰國"), "普吉島": (7.880, 98.392, "普吉島，泰國"),
+    "新加坡": (1.352, 103.820, "新加坡"), "香港": (22.320, 114.170, "香港"),
+    "澳門": (22.199, 113.544, "澳門"), "吉隆坡": (3.139, 101.687, "吉隆坡，馬來西亞"),
+    "峇里島": (-8.409, 115.189, "峇里島，印尼"), "峴港": (16.055, 108.202, "峴港，越南"),
+    "胡志明市": (10.823, 106.630, "胡志明市，越南"), "河內": (21.028, 105.834, "河內，越南"),
+    "上海": (31.230, 121.474, "上海，中國"), "北京": (39.904, 116.407, "北京，中國"),
+}
+
+def _geocode(place):
+    key = place.strip()
+    if key in COMMON_PLACES:
+        lat, lon, name = COMMON_PLACES[key]
+        return lat, lon, name
+    try:
+        r = requests.get("https://nominatim.openstreetmap.org/search",
+                         params={"q": place, "format": "json", "limit": 1, "accept-language": "zh-TW"},
+                         headers={"User-Agent": "liang-translator/1.0 (travel weather)"}, timeout=10)
+        d = r.json()
+        if d:
+            item = d[0]
+            disp = item.get("display_name", place).split(",")
+            name = disp[0].strip() + (("，" + disp[-1].strip()) if len(disp) > 1 else "")
+            return float(item["lat"]), float(item["lon"]), name
+    except Exception as e:
+        logger.warning(f"nominatim failed: {e}")
+    try:
+        g = requests.get("https://geocoding-api.open-meteo.com/v1/search",
+                         params={"name": place, "count": 1, "language": "zh"}, timeout=8).json()
+        results = g.get("results") or []
+        if results:
+            loc = results[0]
+            name = loc.get("name", place) + (("，" + loc["country"]) if loc.get("country") else "")
+            return loc["latitude"], loc["longitude"], name
+    except Exception as e:
+        logger.warning(f"open-meteo geocode failed: {e}")
+    return None
+
+def _weather_advice(code, temp, pop):
+    tips = []
+    rainy = code in (51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99) or (pop is not None and pop >= 50)
+    if rainy:
+        tips.append("☂️ 建議帶傘")
+    if temp is not None:
+        if temp >= 30:
+            tips.append("🧴 高溫，注意防曬補水")
+        elif temp <= 12:
+            tips.append("🧥 偏冷，記得保暖")
+    if not tips:
+        tips.append("👍 天氣舒適，玩得開心")
+    return "，".join(tips)
+
 @app.route('/api/weather', methods=['POST'])
 def api_weather():
-    if not OPENWEATHER_API_KEY:
-        return jsonify({"ok": False, "error": "Weather API key not set"}), 500
-    
     data = request.get_json(force=True, silent=True) or {}
+    place = (data.get('place') or '').strip()
     lat = data.get('lat')
     lon = data.get('lon')
-    if not lat or not lon:
-        return jsonify({"ok": False, "error": "Missing coordinates"}), 400
-        
+    name = place or "目前位置"
     try:
-        url = "https://api.openweathermap.org/data/2.5/weather"
-        r = requests.get(url, params={
-            'lat': lat,
-            'lon': lon,
-            'appid': OPENWEATHER_API_KEY,
-            'units': 'metric',
-            'lang': 'zh_tw'
-        }, timeout=5)
-        r.raise_for_status()
-        return jsonify({"ok": True, "data": r.json()})
+        if place:
+            geo = _geocode(place)
+            if not geo:
+                return jsonify({"ok": False, "error": f"找不到地點「{place}」"}), 400
+            lat, lon, name = geo
+        if lat is None or lon is None:
+            return jsonify({"ok": False, "error": "缺少地點或座標"}), 400
+
+        owm_key = (data.get('owm_key') or '').strip()
+        if owm_key:
+            o = requests.get("https://api.openweathermap.org/data/2.5/weather", params={
+                "lat": lat, "lon": lon, "appid": owm_key, "units": "metric", "lang": "zh_tw",
+            }, timeout=8).json()
+            if str(o.get("cod")) == "200":
+                main = o.get("main") or {}
+                wid = ((o.get("weather") or [{}])[0]).get("id", 800)
+                desc = ((o.get("weather") or [{}])[0]).get("description", "—")
+                raining = wid < 700
+                temp = main.get("temp")
+                return jsonify({
+                    "ok": True, "place": name, "temp": temp,
+                    "feels": main.get("feels_like"), "humidity": main.get("humidity"),
+                    "desc": desc, "pop": None,
+                    "hi": main.get("temp_max"), "lo": main.get("temp_min"),
+                    "advice": _weather_advice(61 if raining else 0, temp, None),
+                    "source": "owm",
+                })
+
+        w = requests.get("https://api.open-meteo.com/v1/forecast", params={
+            "latitude": lat, "longitude": lon,
+            "current": "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,precipitation",
+            "daily": "temperature_2m_max,temperature_2m_min,precipitation_probability_max",
+            "timezone": "auto", "forecast_days": 1,
+        }, timeout=8).json()
+        cur = w.get("current") or {}
+        daily = w.get("daily") or {}
+        code = cur.get("weather_code")
+        temp = cur.get("temperature_2m")
+        pop = (daily.get("precipitation_probability_max") or [None])[0]
+        hi = (daily.get("temperature_2m_max") or [None])[0]
+        lo = (daily.get("temperature_2m_min") or [None])[0]
+        return jsonify({
+            "ok": True, "place": name,
+            "temp": temp, "feels": cur.get("apparent_temperature"),
+            "humidity": cur.get("relative_humidity_2m"),
+            "desc": WMO_CODES.get(code, "—"),
+            "pop": pop, "hi": hi, "lo": lo,
+            "advice": _weather_advice(code, temp, pop),
+        })
     except Exception as e:
-        logger.error(f"Weather error: {e}")
-        return jsonify({"ok": False, "error": str(e)}), 500
+        logger.error(f"weather error: {e}")
+        return jsonify({"ok": False, "error": f"天氣查詢失敗：{type(e).__name__}"}), 400
 
 
 # =========================================================
