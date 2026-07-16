@@ -65,30 +65,30 @@
                     <span class="mic-label">點一下開始說話</span>
                 </button>
 
-                <!-- 相機按鈕 -->
-                <button id="s_camera" class="mic-btn" style="margin-top: 10px; background: linear-gradient(135deg, #00b4db, #0083b0);">
-                    <span class="mic-icon">📷</span>
-                    <span class="mic-label">拍照 / 上傳翻譯</span>
-                </button>
                 <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
 
-                <!-- 匯率按鈕 -->
-                <button id="s_currency" class="mic-btn tool-btn" style="margin-top: 10px; background: linear-gradient(135deg, #2ecc71, #27ae60);">
-                    <span class="mic-icon">💱</span>
-                    <span class="mic-label">匯率換算</span>
-                </button>
+                <!-- 輔助工具網格 (2x2) -->
+                <div class="tools-grid">
+                    <!-- 相機按鈕 -->
+                    <button id="s_camera" style="background: linear-gradient(135deg, #00b4db, #0083b0);">
+                        <span>📷 拍照翻譯</span>
+                    </button>
 
-                <!-- 天氣按鈕 -->
-                <button id="s_weather" class="mic-btn tool-btn" style="margin-top: 10px; background: linear-gradient(135deg, #f39c12, #d35400);">
-                    <span class="mic-icon">🌤️</span>
-                    <span class="mic-label">天氣查詢</span>
-                </button>
+                    <!-- 旅遊問答按鈕 -->
+                    <button id="s_ask" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                        <span>💬 旅遊問答</span>
+                    </button>
 
-                <!-- 旅遊問答按鈕 -->
-                <button id="s_ask" class="mic-btn tool-btn" style="margin-top: 10px; background: linear-gradient(135deg, #9b59b6, #8e44ad);">
-                    <span class="mic-icon">💬</span>
-                    <span class="mic-label">旅遊問答</span>
-                </button>
+                    <!-- 匯率按鈕 -->
+                    <button id="s_currency" style="background: linear-gradient(135deg, #2ecc71, #27ae60);">
+                        <span>💱 匯率換算</span>
+                    </button>
+
+                    <!-- 天氣按鈕 -->
+                    <button id="s_weather" style="background: linear-gradient(135deg, #f39c12, #d35400);">
+                        <span>🌤️ 天氣查詢</span>
+                    </button>
+                </div>
 
                 <!-- 文字輸入框 -->
                 <div class="text-input-area">

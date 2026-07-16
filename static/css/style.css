@@ -189,6 +189,40 @@ html, body {
     transition: all 0.3s ease;
 }
 
+.tools-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+.tools-grid button {
+    height: 52px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease;
+    color: #fff;
+    cursor: pointer;
+    outline: none;
+}
+
+.tools-grid button:hover {
+    transform: scale(1.02);
+    filter: brightness(1.1);
+}
+
+.tools-grid button:active {
+    transform: scale(0.98);
+}
+
 .mic-icon {
     font-size: 1.3rem;
 }

@@ -375,6 +375,27 @@ function setupEventListeners() {
     if (langA) fill(langA, cfg.s_langA || 'zh-TW');
     if (langB) fill(langB, cfg.s_langB || 'en');
     
+    // === 切換單人/面對面模式 ===
+    const modeBtn = document.getElementById('modeBtn');
+    const singleView = document.getElementById('singleView');
+    const faceView = document.getElementById('faceView');
+    if (modeBtn && singleView && faceView) {
+        modeBtn.onclick = () => {
+            const isSingle = !singleView.classList.contains('hidden');
+            if (isSingle) {
+                // 切換到面對面 (雙人)
+                singleView.classList.add('hidden');
+                faceView.classList.remove('hidden');
+                modeBtn.innerHTML = '👥 雙人';
+            } else {
+                // 切換到單人
+                faceView.classList.add('hidden');
+                singleView.classList.remove('hidden');
+                modeBtn.innerHTML = '👤 單人';
+            }
+        };
+    }
+    
     // === 設定彈窗控制邏輯 ===
     const settingsBtn = document.getElementById('settingsBtn');
     const settingsModal = document.getElementById('settingsModal');
@@ -652,15 +673,18 @@ async function convertSimplifiedToTraditional(text) {
 }
 
 
-/* ============================================
-   5. 頁面載入完成時執行初始化
-   ============================================ */
+// ===== 10. 啟動 =====
 // 優先使用 DOMContentLoaded
 document.addEventListener('DOMContentLoaded', initApp);
 
 // 備用：如果 DOMContentLoaded 已經觸發過了
 if (document.readyState !== 'loading') {
     initApp();
+}
+
+// 註冊 Service Worker (PWA)
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW 註冊失敗', e));
 }
 
 
@@ -1255,9 +1279,4 @@ window.addEventListener('popstate', (e) => {
         askModal.classList.add('hidden');
     }
 });
-
-// 註冊 Service Worker (PWA)
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW 註冊失敗', e));
-}
 
