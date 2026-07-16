@@ -788,96 +788,15 @@ function makeFaceSide(langSelId, resultBoxId, micBtnId, getTargetId) {
 // 宣告面對面對話物件
 let recTop = null, recBottom = null;
 
-function initFaceMode() {
-    const fLangTop = $('f_langTop');
-    const fLangBottom = $('f_langBottom');
-    
-    if (fLangTop) fill(fLangTop, cfg.f_langTop || 'en');
-    if (fLangBottom) fill(fLangBottom, cfg.f_langBottom || 'zh-TW');
-
-    recTop = makeFaceSide('f_langTop', 'f_resultTop', 'f_micTop', () => $('f_langBottom').value);
-    recBottom = makeFaceSide('f_langBottom', 'f_resultBottom', 'f_micBottom', () => $('f_langTop').value);
-
-    if (fLangTop) {
-        fLangTop.addEventListener('change', () => { 
-            cfg.f_langTop = fLangTop.value; 
-            try { localStorage.setItem('translator_cfg', JSON.stringify(cfg)); } catch(e){} 
-        });
-    }
-    if (fLangBottom) {
-        fLangBottom.addEventListener('change', () => { 
-            cfg.f_langBottom = fLangBottom.value; 
-            try { localStorage.setItem('translator_cfg', JSON.stringify(cfg)); } catch(e){} 
-        });
-    }
-}
-
-/* =========================================================
-   模式切換
-   ========================================================= */
-let mode = 'single';
-const modeBtn = $('modeBtn');
-if (modeBtn) {
-    modeBtn.addEventListener('click', () => {
-        if (liveOn) stopLive();
-        if (recTop && recTop.active) recTop.stop();
-        if (recBottom && recBottom.active) recBottom.stop();
-        // 確保中斷單人語音辨識
-        if (sRecognizer && sRecognizer.active) {
-            try { sRecognizer.stop(); } catch(e){}
-        }
-        
-        mode = mode === 'single' ? 'face' : 'single';
-        $('singleView').classList.toggle('hidden', mode !== 'single');
-        $('faceView').classList.toggle('hidden', mode !== 'face');
-        modeBtn.textContent = mode === 'single' ? '👤 單人' : '👥 面對面';
-    });
-}
-
-
 // ===== 7. 拍照 / 檔案 =====
-function providerBody() {
-    return {
-        provider: 'gemini',
-        base_url: '',
-        api_key: cfg.geminikey || '',
-        model: ''
-    };
-}
-
-const visionModal = $('visionModal');
-let lastVisionText = '';   // 供「朗讀」按鈕使用
-
-// 相機影像 client 端縮圖：省流量、加速雲端辨識（Gemini 最佳邊長約 1568px）
-function fileToDownscaledDataURL(file, maxDim = 1568, quality = 0.85) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        const url = URL.createObjectURL(file);
-        img.onload = () => {
-            URL.revokeObjectURL(url);
-            const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-            const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
-            const canvas = document.createElement('canvas');
-            canvas.width = w; canvas.height = h;
-            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-            resolve(canvas.toDataURL('image/jpeg', quality));
-        };
-        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('圖片讀取失敗')); };
-        img.src = url;
-    });
-}
-function dataURLToBlob(dataURL) {
-    const [head, b64] = dataURL.split(',');
-    const mime = (head.match(/data:(.*?);/) || [, 'image/jpeg'])[1];
-    const bin = atob(b64);
-    const arr = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-    return new Blob([arr], { type: mime });
-}
-
+let currentVisionDataURL = '';
 
 function openVision(title) {
     stopAllAudio(); setVisionSpeakBtn(false);   // 開新的一張前，先停掉上一段朗讀
+    if ($('vision_target') && $('langB')) {
+        // 同步主畫面的目標翻譯語言，這樣就不會預設只能翻譯為繁中
+        $('vision_target').value = $('langB').value;
+    }
     $('visionTitle').textContent = title;
     $('visionResult').classList.add('hidden');
     $('visionSummary').textContent = '';
@@ -885,6 +804,7 @@ function openVision(title) {
     $('visionStatus').textContent = '';
     const prev = $('visionPreview'); prev.classList.add('hidden'); prev.innerHTML = '';
     lastVisionText = '';
+    currentVisionDataURL = '';
     visionModal.classList.remove('hidden');
 }
 function renderVision(result) {
@@ -914,6 +834,7 @@ if ($('cameraInput')) {
         try {
             $('visionStatus').textContent = '影像處理中…';
             const dataURL = await fileToDownscaledDataURL(file);
+            currentVisionDataURL = dataURL;
             $('visionPreview').innerHTML = `<img src="${dataURL}" alt="preview" style="max-width: 100%; max-height: 300px; border-radius: 5px;">`;
             $('visionPreview').classList.remove('hidden');
             $('visionStatus').textContent = '雲端辨識與翻譯中…（約數秒）';
@@ -924,6 +845,25 @@ if ($('cameraInput')) {
             });
             const data = await res.json();
             if (!data.ok) throw new Error(data.error || '辨識失敗');
+            renderVision(data);
+        } catch (err) { $('visionStatus').textContent = '❌ ' + err.message; toast(err.message); }
+    });
+}
+
+// 支援在彈窗內直接切換目標語言，即時重新翻譯同一張照片
+if ($('vision_target')) {
+    $('vision_target').addEventListener('change', async () => {
+        if (!currentVisionDataURL) return;
+        try {
+            $('visionStatus').textContent = '重新翻譯中…（約數秒）';
+            $('visionResult').classList.add('hidden');
+            const target = byId($('vision_target').value).name;
+            const res = await fetch('/api/vision', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: currentVisionDataURL, target, ...providerBody() }),
+            });
+            const data = await res.json();
+            if (!data.ok) throw new Error(data.error || '翻譯失敗');
             renderVision(data);
         } catch (err) { $('visionStatus').textContent = '❌ ' + err.message; toast(err.message); }
     });
@@ -952,6 +892,7 @@ if ($('vision_close')) {
     $('vision_close').addEventListener('click', () => {
         stopAllAudio();                                    // 關閉同時停掉雲端與瀏覽器語音
         setVisionSpeakBtn(false);
+        visionModal.classList.remove('hidden'); // 注意：新結構使用 class hidden 方式切換
         visionModal.classList.add('hidden');
     });
 }
@@ -960,4 +901,28 @@ if ($('vision_close')) {
 const visionCloseBtn = $('vision_close_btn');
 if (visionCloseBtn) {
     visionCloseBtn.addEventListener('click', () => $('vision_close').click());
+}
+
+function initFaceMode() {
+    const fLangTop = $('f_langTop');
+    const fLangBottom = $('f_langBottom');
+    
+    if (fLangTop) fill(fLangTop, cfg.f_langTop || 'en');
+    if (fLangBottom) fill(fLangBottom, cfg.f_langBottom || 'zh-TW');
+
+    recTop = makeFaceSide('f_langTop', 'f_resultTop', 'f_micTop', () => $('f_langBottom').value);
+    recBottom = makeFaceSide('f_langBottom', 'f_resultBottom', 'f_micBottom', () => $('f_langTop').value);
+
+    if (fLangTop) {
+        fLangTop.addEventListener('change', () => { 
+            cfg.f_langTop = fLangTop.value; 
+            try { localStorage.setItem('translator_cfg', JSON.stringify(cfg)); } catch(e){} 
+        });
+    }
+    if (fLangBottom) {
+        fLangBottom.addEventListener('change', () => { 
+            cfg.f_langBottom = fLangBottom.value; 
+            try { localStorage.setItem('translator_cfg', JSON.stringify(cfg)); } catch(e){} 
+        });
+    }
 }
