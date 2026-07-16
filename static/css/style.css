@@ -29,6 +29,11 @@ body[data-theme="ocean"] {   /* 海洋藍 */
     --bg3: #1a4a70;
     --gold: #4fc3f7; 
     --gold-soft: #9fdcff;
+    --primary-dark: var(--bg1);
+    --primary: var(--bg2);
+    --primary-light: var(--bg3);
+    --accent: var(--gold);
+    --accent-light: var(--gold-soft);
     --border: rgba(79, 195, 247, 0.3);
     --text-secondary: #a0c2e2;
 }
@@ -38,6 +43,11 @@ body[data-theme="forest"] {  /* 森林綠 */
     --bg3: #1f4a30;
     --gold: #5bd18a; 
     --gold-soft: #9fe6b8;
+    --primary-dark: var(--bg1);
+    --primary: var(--bg2);
+    --primary-light: var(--bg3);
+    --accent: var(--gold);
+    --accent-light: var(--gold-soft);
     --border: rgba(91, 209, 138, 0.3);
     --text-secondary: #9fc7b0;
 }
@@ -47,6 +57,11 @@ body[data-theme="sunset"] {  /* 夕陽橙 */
     --bg3: #6a2f1a;
     --gold: #ff9d5c; 
     --gold-soft: #ffc79f;
+    --primary-dark: var(--bg1);
+    --primary: var(--bg2);
+    --primary-light: var(--bg3);
+    --accent: var(--gold);
+    --accent-light: var(--gold-soft);
     --border: rgba(255, 157, 92, 0.3);
     --text-secondary: #e6b2a0;
 }
