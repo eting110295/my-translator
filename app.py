@@ -593,7 +593,7 @@ def api_ask():
                     "sources": sources, "searched": searched})
 
 
-# ===== 9. PWA 路由 =====
+# ===== 9. PWA 與路由 =====
 @app.route('/manifest.json')
 def manifest():
     return send_from_directory('static', 'manifest.json', mimetype='application/manifest+json')
