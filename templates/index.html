@@ -15,8 +15,6 @@
         <header class="topbar">
             <button id="modeBtn" class="mode-btn" title="切換模式">👤 單人</button>
             <h1>Sweety 即時翻譯 <span id="statusDot" class="status-dot"></span></h1>
-            <button id="s_weather" class="tool-btn" style="right: 100px;" title="天氣">🌤️</button>
-            <button id="s_currency" class="tool-btn" title="匯率">💱</button>
             <button id="settingsBtn" class="settings-btn" title="設定">⚙️</button>
         </header>
 
@@ -71,6 +69,18 @@
                     <span class="mic-label">拍照 / 上傳翻譯</span>
                 </button>
                 <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
+
+                <!-- 匯率按鈕 -->
+                <button id="s_currency" class="mic-btn tool-btn" style="margin-top: 10px; background: linear-gradient(135deg, #2ecc71, #27ae60);">
+                    <span class="mic-icon">💱</span>
+                    <span class="mic-label">匯率換算</span>
+                </button>
+
+                <!-- 天氣按鈕 -->
+                <button id="s_weather" class="mic-btn tool-btn" style="margin-top: 10px; background: linear-gradient(135deg, #f39c12, #d35400);">
+                    <span class="mic-icon">🌤️</span>
+                    <span class="mic-label">天氣查詢</span>
+                </button>
 
                 <!-- 文字輸入框 -->
                 <div class="text-input-area">

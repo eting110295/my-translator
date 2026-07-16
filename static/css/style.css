@@ -627,6 +627,17 @@ html, body {
     transform: translateY(-50%) scale(1.1);
 }
 
+.mic-btn.tool-btn {
+    position: static;
+    transform: none;
+    font-size: 1rem;
+    color: var(--primary-dark);
+}
+
+.mic-btn.tool-btn:hover {
+    transform: scale(1.02);
+}
+
 .cur-row {
     display: flex;
     gap: 10px;
