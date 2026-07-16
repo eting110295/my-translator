@@ -325,7 +325,7 @@ html, body {
 }
 
 .modal {
-    display: none;
+    display: flex;
     position: fixed;
     z-index: 2000;
     left: 0;
