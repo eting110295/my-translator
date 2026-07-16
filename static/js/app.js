@@ -1255,3 +1255,9 @@ window.addEventListener('popstate', (e) => {
         askModal.classList.add('hidden');
     }
 });
+
+// 註冊 Service Worker (PWA)
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW 註冊失敗', e));
+}
+

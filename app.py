@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_socketio import SocketIO
 from dotenv import load_dotenv
 import requests
@@ -591,6 +591,19 @@ def api_ask():
 
     return jsonify({"ok": True, "answer": (answer or "") + (("\n\n" + search_note) if search_note else ""),
                     "sources": sources, "searched": searched})
+
+
+# ===== 9. PWA 路由 =====
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory('static', 'manifest.json', mimetype='application/manifest+json')
+
+
+@app.route('/sw.js')
+def service_worker():
+    resp = send_from_directory('static', 'sw.js', mimetype='application/javascript')
+    resp.headers['Service-Worker-Allowed'] = '/'
+    return resp
 
 
 if __name__ == '__main__':
