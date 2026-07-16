@@ -789,6 +789,42 @@ function makeFaceSide(langSelId, resultBoxId, micBtnId, getTargetId) {
 let recTop = null, recBottom = null;
 
 // ===== 7. 拍照 / 檔案 =====
+function providerBody() {
+    return {
+        provider: 'gemini',
+        base_url: '',
+        api_key: cfg.geminikey || '',
+        model: ''
+    };
+}
+
+// 相機影像 client 端縮圖：省流量、加速雲端辨識（Gemini 最佳邊長約 1568px）
+function fileToDownscaledDataURL(file, maxDim = 1568, quality = 0.85) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+            const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('圖片讀取失敗')); };
+        img.src = url;
+    });
+}
+function dataURLToBlob(dataURL) {
+    const [head, b64] = dataURL.split(',');
+    const mime = (head.match(/data:(.*?);/) || [, 'image/jpeg'])[1];
+    const bin = atob(b64);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+}
+
 let currentVisionDataURL = '';
 
 function openVision(title) {
@@ -881,7 +917,7 @@ function setVisionSpeakBtn(on) {
 if ($('vision_speak')) {
     $('vision_speak').addEventListener('click', () => {
         if (visionSpeaking) { stopAllAudio(); return; }   // 念到一半按 = 停止
-        if (!lastVisionText) { toast('沒有可朗讀的內容'); return; }
+        if (!lastVisionText) { toast('開頭沒有可朗讀的內容'); return; }
         ensureAudioUnlocked();                              // 手機須在點擊當下解鎖音訊
         setVisionSpeakBtn(true);
         // 手動朗讀，不受自動朗讀設定影響；播放結束（自然念完或被停止）時把鈕還原
