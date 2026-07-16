@@ -799,7 +799,7 @@ function makeFaceSide(langSelId, resultBoxId, micBtnId, getTargetId) {
 let recTop = null, recBottom = null;
 
 // ===== 7. 拍照 / 檔案 =====
-function providerBody() {
+def providerBody() {
     return {
         provider: 'gemini',
         base_url: '',
@@ -809,7 +809,7 @@ function providerBody() {
 }
 
 // 相機影像 client 端縮圖：省流量、加速雲端辨識（Gemini 最佳邊長約 1568px）
-function fileToDownscaledDataURL(file, maxDim = 1568, quality = 0.85) {
+def fileToDownscaledDataURL(file, maxDim = 1568, quality = 0.85) {
     return new Promise((resolve, reject) => {
         const img = new Image();
         const url = URL.createObjectURL(file);
@@ -826,7 +826,7 @@ function fileToDownscaledDataURL(file, maxDim = 1568, quality = 0.85) {
         img.src = url;
     });
 }
-function dataURLToBlob(dataURL) {
+def dataURLToBlob(dataURL) {
     const [head, b64] = dataURL.split(',');
     const mime = (head.match(/data:(.*?);/) || [, 'image/jpeg'])[1];
     const bin = atob(b64);
@@ -977,6 +977,93 @@ function initFaceMode() {
     }
 }
 
+/* =========================================================
+   8. 匯率換算（免金鑰：後端代理 ER-API / Frankfurter）
+   ========================================================= */
+const CURRENCIES = [
+    { code: 'TWD', label: 'TWD 台幣' },
+    { code: 'USD', label: 'USD 美元' },
+    { code: 'JPY', label: 'JPY 日圓' },
+    { code: 'KRW', label: 'KRW 韓元' },
+    { code: 'CNY', label: 'CNY 人民幣' },
+    { code: 'HKD', label: 'HKD 港幣' },
+    { code: 'EUR', label: 'EUR 歐元' },
+    { code: 'GBP', label: 'GBP 英鎊' },
+    { code: 'THB', label: 'THB 泰銖' },
+    { code: 'SGD', label: 'SGD 新加坡幣' },
+    { code: 'MYR', label: 'MYR 馬來幣' },
+    { code: 'VND', label: 'VND 越南盾' },
+    { code: 'IDR', label: 'IDR 印尼盾' },
+    { code: 'PHP', label: 'PHP 披索' },
+    { code: 'AUD', label: 'AUD 澳幣' },
+    { code: 'CAD', label: 'CAD 加幣' },
+];
+function fillCur(sel, code) {
+    sel.innerHTML = CURRENCIES.map(c => `<option value="${c.code}">${c.label}</option>`).join('');
+    sel.value = code;
+}
+function fmtMoney(n) {
+    if (!isFinite(n)) return '—';
+    const dp = Math.abs(n) >= 100 ? 2 : 4;   // 大額 2 位、小額 4 位
+    return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: dp });
+}
+function persistCur() {
+    cfg.cur_from = $('cur_from').value;
+    cfg.cur_to = $('cur_to').value;
+    cfg.cur_amount = $('cur_amount').value;
+    try { localStorage.setItem('translator_cfg', JSON.stringify(cfg)); } catch(e){}
+}
+
+let curTimer = null;
+async function doConvert() {
+    const amount = parseFloat($('cur_amount').value);
+    const from = $('cur_from').value, to = $('cur_to').value;
+    if (!isFinite(amount)) { $('cur_result').textContent = '請輸入金額'; $('cur_rate').textContent = ''; return; }
+    $('cur_result').textContent = '換算中…';
+    try {
+        const res = await fetch('/api/currency', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ base: from, target: to, amount }),
+        });
+        const d = await res.json();
+        if (!d.ok) throw new Error(d.error || '查詢失敗');
+        $('cur_result').textContent = `${fmtMoney(amount)} ${from} = ${fmtMoney(d.result)} ${to}`;
+        const when = (d.date || '').replace(' (UTC)', '').slice(0, 16);
+        $('cur_rate').textContent = `1 ${from} ≈ ${fmtMoney(d.rate)} ${to}` + (when ? `　·　${when}` : '');
+    } catch (e) { $('cur_result').textContent = '—'; toast(e.message); }
+}
+function scheduleConvert() { clearTimeout(curTimer); curTimer = setTimeout(doConvert, 350); }
+
+if ($('s_currency')) {
+    $('s_currency').addEventListener('click', () => {
+        fillCur($('cur_from'), cfg.cur_from || 'USD');
+        fillCur($('cur_to'), cfg.cur_to || 'TWD');
+        $('cur_amount').value = cfg.cur_amount || '1';
+        history.pushState({ modal: 'currency' }, '');
+        $('currencyModal').classList.remove('hidden');
+        doConvert();
+    });
+}
+const closeCurrency = () => {
+    $('currencyModal').classList.add('hidden');
+    if (history.state && history.state.modal === 'currency') {
+        history.back();
+    }
+};
+if ($('cur_close')) $('cur_close').addEventListener('click', closeCurrency);
+if ($('cur_close_x')) $('cur_close_x').addEventListener('click', closeCurrency);
+
+if ($('cur_swap')) {
+    $('cur_swap').addEventListener('click', () => {
+        const a = $('cur_from').value; $('cur_from').value = $('cur_to').value; $('cur_to').value = a;
+        persistCur(); doConvert();
+    });
+}
+if ($('cur_from')) $('cur_from').addEventListener('change', () => { persistCur(); doConvert(); });
+if ($('cur_to')) $('cur_to').addEventListener('change', () => { persistCur(); doConvert(); });
+if ($('cur_amount')) $('cur_amount').addEventListener('input', () => { persistCur(); scheduleConvert(); });
+if ($('cur_convert')) $('cur_convert').addEventListener('click', doConvert);
+
 // --- 歷史記錄狀態管理以支援手機返回鍵關閉彈窗 ---
 window.addEventListener('popstate', (e) => {
     // 當使用者按下手機返回鍵時，自動關閉所有開啟的彈窗而非離開網頁
@@ -988,5 +1075,9 @@ window.addEventListener('popstate', (e) => {
     const settingsModal = $('settingsModal');
     if (settingsModal && settingsModal.style.display === 'flex') {
         settingsModal.style.display = 'none';
+    }
+    const currencyModal = $('currencyModal');
+    if (currencyModal && !currencyModal.classList.contains('hidden')) {
+        currencyModal.classList.add('hidden');
     }
 });

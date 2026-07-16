@@ -605,3 +605,69 @@ html, body {
     margin-bottom: 5px;
     color: var(--accent);
 }
+
+/* ============ 匯率換算樣式 ============ */
+.tool-btn {
+    position: absolute;
+    right: 60px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--accent);
+    transition: transform 0.3s ease, color 0.3s ease;
+    outline: none;
+    user-select: none;
+}
+
+.tool-btn:hover {
+    color: var(--accent-light);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.cur-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin: 15px 0;
+}
+
+#cur_swap {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    color: var(--primary-dark);
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+#cur_swap:hover {
+    transform: scale(1.1) rotate(180deg);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+}
+
+.cur-result {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: var(--accent);
+    text-align: center;
+    margin: 20px 0 10px;
+    min-height: 35px;
+    word-break: break-all;
+}
+
+.cur-rate {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 20px;
+}

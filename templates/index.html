@@ -15,6 +15,7 @@
         <header class="topbar">
             <button id="modeBtn" class="mode-btn" title="切換模式">👤 單人</button>
             <h1>Sweety 即時翻譯 <span id="statusDot" class="status-dot"></span></h1>
+            <button id="s_currency" class="tool-btn" title="匯率">💱</button>
             <button id="settingsBtn" class="settings-btn" title="設定">⚙️</button>
         </header>
 
@@ -166,6 +167,29 @@
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button id="vision_speak" class="save-btn" style="flex: 1; background: var(--accent);">🔊 朗讀</button>
                 <button id="vision_close_btn" class="save-btn" style="flex: 1; background: #555;">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 匯率換算彈窗 -->
+    <div class="modal hidden" id="currencyModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span id="cur_close_x" class="close-btn">&times;</span>
+            <h2>💱 匯率換算</h2>
+            <div class="form-group">
+                <label for="cur_amount" style="font-weight: bold;">輸入金額：</label>
+                <input type="number" id="cur_amount" class="text-input" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(212,175,55,0.25); border-radius: 10px; padding: 12px 14px;" value="1" min="0" step="any">
+            </div>
+            <div class="cur-row">
+                <select id="cur_from" class="lang-select"></select>
+                <button id="cur_swap" title="對調幣別">⇄</button>
+                <select id="cur_to" class="lang-select"></select>
+            </div>
+            <div class="cur-result" id="cur_result">—</div>
+            <div class="cur-rate" id="cur_rate"></div>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button id="cur_convert" class="save-btn" style="flex: 1; margin-top: 0;">換算</button>
+                <button id="cur_close" class="save-btn" style="flex: 1; margin-top: 0; background: #555;">關閉</button>
             </div>
         </div>
     </div>

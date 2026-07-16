@@ -1,77 +1,59 @@
-from flask import Flask, jsonify, request, render_template
-from flask_socketio import SocketIO, emit
-from dotenv import load_dotenv
 import os
-import requests
-import providers
-import mimetypes
-from google import genai
-import queue
-import threading
-import asyncio
 import logging
+from flask import Flask, request, jsonify, render_template
+from flask_socketio import SocketIO
+from dotenv import load_dotenv
+import requests
 
-# 強制映射 MIME 類型，修復 Windows 註冊表關聯造成的 CSS/JS 無法加載問題
-mimetypes.add_type('text/css', '.css')
-mimetypes.add_type('application/javascript', '.js')
-
+# 載入環境變數
 load_dotenv()
-app = Flask(__name__, 
-            template_folder='templates',
-            static_folder='static',
-            static_url_path='/static')
 
-# 初始化 SocketIO 與 Gemini Live 設定
+# 初始化 Flask 與 SocketIO (支援即時串流)
+app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
-active_sessions = {}
-LIVE_MODEL = "gemini-3.5-live-translate-preview"
-
 
 # 設定日誌
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-LIBRETRANSLATE_API = os.getenv('LIBRETRANSLATE_API', 'https://libretranslate.de')
-OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY')
+# 從環境變數讀取金鑰，如果不存在，則後續會拋出錯誤或要求前端提供
 API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+
+# 引入核心的 Gemini Translation Provider
+import providers
+
+# 定義翻譯與語音模型名稱（可依需求調整）
+TRANSLATE_MODEL = "gemini-3.1-flash-lite"
 TTS_MODEL = "gemini-3.1-flash-tts-preview"
 
-fallback_languages = [
-    {'code': 'en', 'name': 'English'},
-    {'code': 'zh', 'name': 'Chinese'},
-    {'code': 'ja', 'name': 'Japanese'},
-    {'code': 'es', 'name': 'Spanish'},
-    {'code': 'fr', 'name': 'French'},
-    {'code': 'de', 'name': 'German'},
-    {'code': 'ko', 'name': 'Korean'},
-    {'code': 'pt', 'name': 'Portuguese'},
-]
+# 載入額外環境變數 (天氣 API，供即時對話測試用，免金鑰)
+OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY')
 
 
+# ===== 1. 主畫面路由 =====
 @app.route('/')
 def index():
     return render_template('index.html')
 
 
-@app.route('/languages')
-def languages():
-    try:
-        response = requests.get(f'{LIBRETRANSLATE_API}/languages', timeout=10)
-        response.raise_for_status()
-        return jsonify(response.json())
-    except requests.RequestException:
-        return jsonify(fallback_languages)
-
-
-@app.route('/api/health')
+# ===== 2. 系統健康檢查 API =====
+@app.route('/api/health', methods=['GET'])
 def health():
-    return jsonify({'ok': True})
+    return jsonify({"ok": True, "model": TRANSLATE_MODEL, "tts_model": TTS_MODEL})
 
 
-# ===== 翻譯 API =====
+# ===== 3. 單向翻譯 API =====
 @app.route('/api/translate', methods=['POST'])
 def api_translate():
     data = request.get_json(force=True, silent=True) or {}
+    text = (data.get('text') or '').strip()
+    if not text:
+        return jsonify({"ok": False, "error": "no text"}), 400
+
+    # 封裝傳遞給 providers 的參數
+    data['api_key'] = (data.get('api_key') or '').strip() or API_KEY
+    data['model'] = TRANSLATE_MODEL
+
     result = providers.translate(data)
     return jsonify(result), (200 if result.get('ok') else 400)
 
@@ -114,270 +96,240 @@ def api_tts():
     return jsonify({'error': last_err}), 400
 
 
-@app.route('/weather')
-def weather():
-    city = request.args.get('city', '').strip()
-    if not city:
-        return jsonify({'error': 'City query is required.'}), 400
-
+# ===== 4. 天氣查詢 API (備用測試，免金鑰) =====
+@app.route('/api/weather', methods=['POST'])
+def api_weather():
     if not OPENWEATHER_API_KEY:
-        return jsonify({'error': 'OpenWeather API key is not configured.'}), 500
-
+        return jsonify({"ok": False, "error": "Weather API key not set"}), 500
+    
+    data = request.get_json(force=True, silent=True) or {}
+    lat = data.get('lat')
+    lon = data.get('lon')
+    if not lat or not lon:
+        return jsonify({"ok": False, "error": "Missing coordinates"}), 400
+        
     try:
-        response = requests.get(
-            'https://api.openweathermap.org/data/2.5/weather',
-            params={
-                'q': city,
-                'appid': OPENWEATHER_API_KEY,
-                'units': 'metric',
-                'lang': 'zh_tw',
-            },
-            timeout=10,
-        )
-        response.raise_for_status()
-        data = response.json()
-
-        result = {
-            'city': f"{data.get('name')}, {data.get('sys', {}).get('country')}",
-            'description': data.get('weather', [{}])[0].get('description', ''),
-            'temperature': data.get('main', {}).get('temp'),
-            'feels_like': data.get('main', {}).get('feels_like'),
-            'humidity': data.get('main', {}).get('humidity'),
-            'wind_speed': data.get('wind', {}).get('speed'),
-        }
-        return jsonify(result)
-    except requests.RequestException:
-        return jsonify({'error': 'Unable to fetch weather information.'}), 503
+        url = "https://api.openweathermap.org/data/2.5/weather"
+        r = requests.get(url, params={
+            'lat': lat,
+            'lon': lon,
+            'appid': OPENWEATHER_API_KEY,
+            'units': 'metric',
+            'lang': 'zh_tw'
+        }, timeout=5)
+        r.raise_for_status()
+        return jsonify({"ok": True, "data": r.json()})
+    except Exception as e:
+        logger.error(f"Weather error: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
 
 
-@app.route('/translate', methods=['POST'])
-def translate():
-    payload = request.get_json() or {}
-    text = payload.get('q', '').strip()
-    source = payload.get('source', 'en')
-    target = payload.get('target', 'zh')
-
-    if not text:
-        return jsonify({'error': 'No text provided for translation.'}), 400
-
-    try:
-        response = requests.post(
-            f'{LIBRETRANSLATE_API}/translate',
-            json={
-                'q': text,
-                'source': source,
-                'target': target,
-                'format': 'text',
-            },
-            timeout=15,
-        )
-        response.raise_for_status()
-        result = response.json()
-        return jsonify({'translatedText': result.get('translatedText')})
-    except requests.RequestException:
-        return jsonify({'error': 'Translation service is unavailable.'}), 503
-
+# =========================================================
+# Gemini Live 即時雙向對話 (Websocket 伺服器代理端)
+# =========================================================
+import json
+from google import genai
+from google.genai import types
 
 class GeminiSession:
-    """Gemini Live 即時語音串流 (招牌『即時模式』)。"""
-
+    """維護單一 WebSocket 連線的 Gemini Live 雙向音訊會話"""
     def __init__(self, sid, instructions, api_key=None):
         self.sid = sid
-        self.instructions = instructions
-        self.audio_in_queue = queue.Queue()
-        self.stop_event = threading.Event()
-        self.thread = None
+        # 初始化 Gemini API 使用者代理客戶端 (使用 2.0 原生 Live WebSocket 協定，指定 v1alpha 版本)
         self.client = genai.Client(api_key=(api_key or API_KEY), http_options={'api_version': 'v1alpha'})
-
+        self.instructions = instructions
+        self.live_session = None
+        self.active = False
+        
     def start(self):
-        self.thread = threading.Thread(target=self.run_loop)
-        self.thread.start()
-
-    def stop(self):
-        self.stop_event.set()
-        if self.thread:
-            self.thread.join(timeout=2)
-
-    def add_audio(self, audio_data):
-        self.audio_in_queue.put(audio_data)
-
-    def run_loop(self):
-        asyncio.run(self.async_process())
-
-    async def async_process(self):
-        config = {
-            "response_modalities": ["AUDIO"],           # 原生語音模型只支援 AUDIO
-            "system_instruction": self.instructions,
-            "output_audio_transcription": {},            # 同時取得字幕文字
-        }
+        self.active = True
+        # 啟動背景執行緒，與 Gemini 伺服器建立 WebSocket 連線
+        socketio.start_background_task(self._run)
+        
+    def _run(self):
+        # 語音模型：主用 gemini-2.0-flash-exp (原生 Live API)
+        model_id = "gemini-2.0-flash-exp"
+        
+        # 設定為同時產出「文字與語音」的雙向模態
+        config = types.LiveConnectConfig(
+            response_modalities=[types.LiveModality.TEXT, types.LiveModality.AUDIO],
+            system_instruction=types.Content(parts=[types.Part.from_text(text=self.instructions)]),
+            speech_config=types.SpeechConfig(
+                voice_config=types.VoiceConfig(
+                    prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Puck")
+                )
+            )
+        )
+        
+        logger.info(f"[{self.sid}] Connecting to Gemini Live API...")
         try:
-            async with self.client.aio.live.connect(model=LIVE_MODEL, config=config) as session:
-                logger.info(f"Session {self.sid} connected to Gemini Live.")
-                sender_task = asyncio.create_task(self.sender(session))
-                receiver_task = asyncio.create_task(self.receiver(session))
-
-                while not self.stop_event.is_set():
-                    if receiver_task.done():
-                        receiver_task = asyncio.create_task(self.receiver(session))
-                    if sender_task.done() and not sender_task.cancelled():
-                        exc = sender_task.exception() if not sender_task.cancelled() else None
-                        if exc:
-                            logger.error(f"Sender task died: {exc}")
-                            sender_task = asyncio.create_task(self.sender(session))
-                    await asyncio.sleep(0.1)
-
-                sender_task.cancel()
-                receiver_task.cancel()
+            # 建立 Live 會話
+            with self.client.aio.live_connect(model=model_id, config=config) as session:
+                self.live_session = session
+                logger.info(f"[{self.sid}] Connected to Gemini Live API.")
+                
+                # 啟動背景接收執行緒
+                socketio.start_background_task(self._recv_loop)
+                
+                # 保持主連線執行緒運行，直至 session 被關閉
+                while self.active and not session.closed:
+                    socketio.sleep(0.5)
         except Exception as e:
-            logger.error(f"Gemini connection error: {e}")
-            socketio.emit('error', {'msg': str(e)}, to=self.sid)
+            logger.error(f"[{self.sid}] Gemini Live error: {e}")
+            socketio.emit('error', {'msg': f"Gemini 連線錯誤: {str(e)}"}, to=self.sid)
+        finally:
+            self.close()
 
-    async def sender(self, session):
-        while True:
+    def _recv_loop(self):
+        """背景迴圈：持續接收來自 Gemini 伺服器的串流回覆，並轉發給前端"""
+        logger.info(f"[{self.sid}] Starting Gemini Live receive loop.")
+        try:
+            # 當 session 存在且活躍時持續接收
+            while self.active and self.live_session and not self.live_session.closed:
+                # 接收下一包 Gemini 的回應
+                response = self.live_session.receive()
+                if not response:
+                    socketio.sleep(0.01)
+                    continue
+                
+                # 1. 處理文字回覆
+                if response.text:
+                    socketio.emit('text_response', {'text': response.text}, to=self.sid)
+                
+                # 2. 處理原生 24kHz PCM 音訊回覆
+                if response.audio:
+                    socketio.emit('audio_response', response.audio, to=self.sid)
+                    
+                # 3. 處理 Gemini 回話完成標記 (Turn Complete)
+                if response.turn_complete:
+                    socketio.emit('turn_complete', {}, to=self.sid)
+                    
+        except Exception as e:
+            logger.error(f"[{self.sid}] Receive loop error: {e}")
+        finally:
+            logger.info(f"[{self.sid}] Gemini Live receive loop ended.")
+            self.close()
+
+    def send_audio(self, pcm_bytes):
+        """接收來自前端傳入的瀏覽器麥克風音訊片段 (16kHz PCM)，轉發給 Gemini 伺服器"""
+        if self.active and self.live_session and not self.live_session.closed:
             try:
-                if not self.audio_in_queue.empty():
-                    chunk = self.audio_in_queue.get()
-                    from google.genai.types import Blob
-                    audio_blob = Blob(data=chunk, mime_type="audio/pcm")
-                    await session.send_realtime_input(audio=audio_blob)
-                else:
-                    await asyncio.sleep(0.01)
-            except asyncio.CancelledError:
-                break
+                # 將 16kHz PCM 音訊打包送給 Gemini (模型會自動進行下採樣/上採樣處理)
+                self.live_session.send(
+                    input={"data": pcm_bytes, "mime_type": "audio/pcm;rate=16000"},
+                    end_of_turn=False
+                )
             except Exception as e:
-                logger.error(f"Sender Error: {e}")
-                await asyncio.sleep(0.1)
+                logger.error(f"[{self.sid}] Send audio failed: {e}")
+                self.close()
 
-    async def receiver(self, session):
-        try:
-            async for response in session.receive():
-                if self.stop_event.is_set():
-                    break
-                server_content = response.server_content
-                if server_content is not None:
-                    # 字幕（原生語音的逐字轉錄）
-                    ot = getattr(server_content, 'output_transcription', None)
-                    if ot is not None and getattr(ot, 'text', None):
-                        socketio.emit('text_response', {'text': ot.text}, to=self.sid)
-                    model_turn = server_content.model_turn
-                    if model_turn is not None:
-                        for part in model_turn.parts:
-                            inline = getattr(part, 'inline_data', None)
-                            if inline is not None and inline.data:
-                                socketio.emit('audio_response', inline.data, to=self.sid)   # 24kHz PCM 語音
-                            elif getattr(part, 'text', None):
-                                socketio.emit('text_response', {'text': part.text}, to=self.sid)
-                    if server_content.turn_complete:
-                        socketio.emit('turn_complete', to=self.sid)
-        except asyncio.CancelledError:
-            pass
-        except Exception as e:
-            logger.error(f"Receiver Error: {e}")
-            socketio.emit('error', {'msg': str(e)}, to=self.sid)
+    def close(self):
+        """安全關閉會話，通知前端並釋放資源"""
+        if not self.active:
+            return
+        self.active = False
+        logger.info(f"[{self.sid}] Closing session...")
+        if self.live_session:
+            try:
+                self.live_session.close()
+            except Exception:
+                pass
+            self.live_session = None
+        socketio.emit('session_ended', {}, to=self.sid)
+        if self.sid in active_sessions:
+            del active_sessions[self.sid]
 
 
-# --- SocketIO Events (Gemini Live 即時模式) ---
+# 保存全域活動會話清單
+active_sessions = {}
+
 @socketio.on('connect')
 def handle_connect():
-    logger.info(f"Client connected: {request.sid}")
-
+    logger.info(f"Socket connected: {request.sid}")
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    sid = request.sid
-    if sid in active_sessions:
-        active_sessions[sid].stop()
-        del active_sessions[sid]
-    logger.info(f"Client disconnected: {sid}")
-
+    logger.info(f"Socket disconnected: {request.sid}")
+    # 斷線時自動釋放會話資源
+    if request.sid in active_sessions:
+        active_sessions[request.sid].close()
 
 @socketio.on('start_session')
-def handle_start(data):
+def handle_start_session(data):
+    """前端點擊「開始說話」並開啟即時對話時觸發"""
     sid = request.sid
-    langA = data.get('langA', 'Chinese')
-    langB = data.get('langB', 'English')
-    user_key = (data.get('gemini_key') or '').strip() or None   # 選填覆蓋，留空用伺服器內建
+    lang_a = data.get('langA', 'Traditional Chinese')
+    lang_b = data.get('langB', 'English')
+    user_key = (data.get('gemini_key') or '').strip()
+    
+    # 產生引導 Gemini Live 語音模型的系統指令，使其扮演精準的雙向翻譯官
     instruction = (
-        f"You are a real-time voice translator. Your ONLY job is to translate speech.\n"
-        f"- When you hear {langA}, translate it to {langB} and reply in {langB}.\n"
-        f"- When you hear {langB}, translate it to {langA} and reply in {langA}.\n"
-        f"Rules: Output ONLY the translation. No greeting or explanation. Speak naturally."
+        f"You are a real-time face-to-face interpreter between {lang_a} and {lang_b}.\n"
+        f"The user speaking to you might speak either {lang_a} or {lang_b}.\n"
+        f"Your task:\n"
+        f"1. If the speaker speaks {lang_a}, translate it to {lang_b} immediately.\n"
+        f"2. If the speaker speaks {lang_b}, translate it to {lang_a} immediately.\n"
+        f"3. Respond with ONLY the translated text and its audio. Do NOT add any preamble, explanation, or chat.\n"
+        f"4. Be concise and natural, optimized for spoken conversation.\n"
+        f"5. Keep the translation faithful and grammatically correct."
     )
-    logger.info(f"Starting Live session: {langA} <-> {langB}")
+    
+    # 如果已存在舊會話，先將其關閉
     if sid in active_sessions:
-        active_sessions[sid].stop()
+        active_sessions[sid].close()
+        
+    # 建立並啟動新會話
     session = GeminiSession(sid, instruction, api_key=user_key)
     active_sessions[sid] = session
     session.start()
-    emit('status', {'msg': 'Session Started'})
-
+    logger.info(f"[{sid}] Live session started.")
 
 @socketio.on('stop_session')
-def handle_stop():
+def handle_stop_session():
+    """前端點擊「停止說話」關閉串流時觸發"""
     sid = request.sid
     if sid in active_sessions:
-        active_sessions[sid].stop()
-        del active_sessions[sid]
-
+        active_sessions[sid].close()
+        logger.info(f"[{sid}] Live session stopped by client request.")
 
 @socketio.on('audio_in')
-def handle_audio(data):
+def handle_audio_in(data):
+    """持續接收前端傳入的二進位麥克風 PCM 串流分片"""
     sid = request.sid
     if sid in active_sessions:
-        active_sessions[sid].add_audio(data)
+        active_sessions[sid].send_audio(data)
 
 
-@app.after_request
-def add_header(response):
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '-1'
-    return response
-
-
-# ===== 5. 拍照 / 檔案 API =====
-def _provider_cfg(src):
-    """從 request (json 或 form) 取出供應商設定。"""
-    provider = (src.get('provider') or 'gemini').lower()
+# ===== 5. 拍照 / 檔案輔助函式 =====
+def _provider_cfg(data):
+    """從前端請求中抽取 API 供應商、Model、金鑰設定"""
+    src = data.get('provider_config') or {}
     return {
-        'provider': provider,
-        'base_url': src.get('base_url') or '',
+        'provider': src.get('provider') or 'gemini',
         'api_key': src.get('api_key') or '',
         'model': src.get('model') or '',
+        'base_url': src.get('base_url') or ''
     }
 
-
-def _run_analyze(pc, target, force_gemini=False, **kw):
-    """
-    依供應商設定執行 providers.analyze，統一處理金鑰解析與錯誤。
-    force_gemini=True 時（例如 PDF）強制走伺服器 Gemini 金鑰。
-    回傳 (result_dict, status_code)。
-    """
-    provider = pc['provider']
-    note = None
-    if force_gemini and provider != 'gemini':
-        provider = 'gemini'
-        note = 'PDF 不支援所選供應商，已自動改用 Gemini 雲端辨識'
-
+def _run_analyze(pc, target, file_bytes=None, mime_type=None):
+    """執行 providers.analyze 邏輯。"""
     try:
-        if provider == 'openai':
+        note = None
+        if pc['provider'] == 'openai':
             if not pc['api_key']:
-                return {"ok": False, "error": "OpenAI 相容供應商需要 API Key（請到設定填入）"}, 400
+                return {"ok": False, "error": "OpenAI API key not provided"}, 400
             result = providers.analyze('openai', pc['api_key'], pc['model'], target,
-                                       base_url=pc['base_url'], **kw)
-        else:  # gemini
+                                       file_bytes=file_bytes, mime_type=mime_type)
+        else:
+            # 預設使用 Gemini 供應商
             key = (pc['api_key'] if pc['provider'] == 'gemini' else '') or API_KEY
             if not key:
-                return {"ok": False, "error": "找不到 Gemini API Key"}, 400
-            model = pc['model'] if pc['provider'] == 'gemini' else ''
-            result = providers.analyze('gemini', key, model, target, **kw)
-    except requests.HTTPError as e:
-        body = ''
-        try:
-            body = e.response.text[:300]
-        except Exception:
-            pass
-        return {"ok": False, "error": f"HTTP {e.response.status_code if e.response else '?'}: {body}"}, 400
+                return {"ok": False, "error": "Gemini API key not configured on server"}, 400
+            model = pc['model'] or TRANSLATE_MODEL
+            if model != TRANSLATE_MODEL:
+                note = f"正在使用自訂模型 {model}"
+            result = providers.analyze('gemini', key, model, target,
+                                       file_bytes=file_bytes, mime_type=mime_type)
     except Exception as e:
         logger.error(f"analyze error: {e}")
         return {"ok": False, "error": f"{type(e).__name__}: {e}"}, 400
@@ -413,6 +365,52 @@ def api_vision():
     pc = _provider_cfg(data)
     result, status = _run_analyze(pc, target, file_bytes=raw, mime_type=mime)
     return jsonify(result), status
+
+
+# ===== 6. 匯率 API =====
+# 匯率換算：免金鑰。主用 open.er-api.com（含 TWD 等多幣別），備援 frankfurter.app（歐洲央行）
+@app.route('/api/currency', methods=['POST'])
+def api_currency():
+    data = request.get_json(force=True, silent=True) or {}
+    base = (data.get('base') or 'USD').upper()
+    target = (data.get('target') or 'TWD').upper()
+    try:
+        amount = float(data.get('amount', 1) or 1)
+    except (TypeError, ValueError):
+        amount = 1.0
+
+    if base == target:
+        return jsonify({"ok": True, "base": base, "target": target, "amount": amount,
+                        "rate": 1.0, "result": amount, "date": "", "source": "same"})
+
+    # 主：open.er-api.com（免金鑰，幣別多，含 TWD）
+    try:
+        r = requests.get(f"https://open.er-api.com/v6/latest/{base}", timeout=8)
+        r.raise_for_status()
+        d = r.json()
+        rate = (d.get("rates") or {}).get(target)
+        if rate:
+            return jsonify({"ok": True, "base": base, "target": target, "amount": amount,
+                            "rate": rate, "result": amount * rate,
+                            "date": d.get("time_last_update_utc", ""), "source": "er-api"})
+    except Exception as e:
+        logger.warning(f"currency er-api failed: {e}")
+
+    # 備援：frankfurter.app（歐洲央行，無 TWD 等部分亞幣）
+    try:
+        r = requests.get("https://api.frankfurter.app/latest",
+                         params={"from": base, "to": target}, timeout=8)
+        r.raise_for_status()
+        d = r.json()
+        rate = (d.get("rates") or {}).get(target)
+        if rate:
+            return jsonify({"ok": True, "base": base, "target": target, "amount": amount,
+                            "rate": rate, "result": amount * rate,
+                            "date": d.get("date", ""), "source": "frankfurter"})
+    except Exception as e:
+        logger.warning(f"currency frankfurter failed: {e}")
+
+    return jsonify({"ok": False, "error": f"查不到 {base}→{target} 匯率（請確認幣別代碼）"}), 400
 
 
 if __name__ == '__main__':
