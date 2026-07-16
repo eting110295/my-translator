@@ -392,6 +392,7 @@ function setupEventListeners() {
                 cfgRate.value = cfg.rate;
                 if (cfgRateVal) cfgRateVal.textContent = parseFloat(cfg.rate).toFixed(1);
             }
+            history.pushState({ modal: 'settings' }, '');
             settingsModal.style.display = 'flex';
         };
 
@@ -399,6 +400,9 @@ function setupEventListeners() {
         if (closeBtn) {
             closeBtn.onclick = () => {
                 settingsModal.style.display = 'none';
+                if (history.state && history.state.modal === 'settings') {
+                    history.back();
+                }
             };
         }
 
@@ -406,6 +410,9 @@ function setupEventListeners() {
         window.addEventListener('click', (e) => {
             if (e.target === settingsModal) {
                 settingsModal.style.display = 'none';
+                if (history.state && history.state.modal === 'settings') {
+                    history.back();
+                }
             }
         });
 
@@ -431,6 +438,9 @@ function setupEventListeners() {
                 }
 
                 settingsModal.style.display = 'none';
+                if (history.state && history.state.modal === 'settings') {
+                    history.back();
+                }
                 toast('設定已儲存！');
             };
         }
@@ -841,6 +851,7 @@ function openVision(title) {
     const prev = $('visionPreview'); prev.classList.add('hidden'); prev.innerHTML = '';
     lastVisionText = '';
     currentVisionDataURL = '';
+    history.pushState({ modal: 'vision' }, '');
     visionModal.classList.remove('hidden');
 }
 function renderVision(result) {
@@ -930,6 +941,9 @@ if ($('vision_close')) {
         setVisionSpeakBtn(false);
         visionModal.classList.remove('hidden'); // 注意：新結構使用 class hidden 方式切換
         visionModal.classList.add('hidden');
+        if (history.state && history.state.modal === 'vision') {
+            history.back();
+        }
     });
 }
 
@@ -962,3 +976,17 @@ function initFaceMode() {
         });
     }
 }
+
+// --- 歷史記錄狀態管理以支援手機返回鍵關閉彈窗 ---
+window.addEventListener('popstate', (e) => {
+    // 當使用者按下手機返回鍵時，自動關閉所有開啟的彈窗而非離開網頁
+    if (!visionModal.classList.contains('hidden')) {
+        stopAllAudio();
+        setVisionSpeakBtn(false);
+        visionModal.classList.add('hidden');
+    }
+    const settingsModal = $('settingsModal');
+    if (settingsModal && settingsModal.style.display === 'flex') {
+        settingsModal.style.display = 'none';
+    }
+});
