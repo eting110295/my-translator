@@ -523,7 +523,7 @@ def api_weather():
         return jsonify({"ok": False, "error": f"天氣查詢失敗：{type(e).__name__}"}), 400
 
 
-# ===== 8. 旅遊問答 API =====
+# ===== 8. 旅遊助手 API =====
 def _tavily_search(key, query, max_results=5):
     r = requests.post("https://api.tavily.com/search", json={
         "api_key": key, "query": query, "max_results": max_results,
@@ -559,7 +559,7 @@ def api_ask():
             logger.warning(f"tavily failed: {e}")
             search_note = "（即時搜尋暫時無法使用，改用 AI 既有知識回答）"
 
-    # 2) 交給 LLM 回答（走設定的供應商）
+    # 2) 交給 LLM 回答（走設定 of 供應商）
     system = (
         "You are a helpful, concise travel assistant. "
         f"Answer the user's question in {target}. "
