@@ -822,10 +822,14 @@ function makeFaceSide(langSelId, resultBoxId, micBtnId, getTargetId) {
                 // 顯示在「對面那一側」的框
                 const otherBox = (resultBoxId === 'f_resultBottom') ? $('f_resultTop') : $('f_resultBottom');
                 setResult(otherBox, out);
+                setResult(box, t); // 還原說話者的原文顯示
                 ensureAudioUnlocked();
                 speak(out, BCP[tgt] || 'en-US', true);
                 pushHistory(t, out);
-            } catch (e) { toast(e.message); }
+            } catch (e) {
+                setResult(box, t); // 失敗時也還原原文
+                toast(e.message);
+            }
         },
         onState: (on) => {
             btn.classList.toggle('listening', on);
