@@ -50,7 +50,10 @@
     <div class="container">
         <!-- 頂部標題列 -->
         <header class="topbar">
-            <button id="modeBtn" class="mode-btn" title="切換模式">👤 單人</button>
+            <div class="mode-toggle">
+                <button id="modeSingle" class="mode-toggle-btn active">👤 單人</button>
+                <button id="modeDouble" class="mode-toggle-btn">👥 雙人</button>
+            </div>
             <h1>Sweety 即時翻譯 <span id="statusDot" class="status-dot"></span></h1>
             <button id="settingsBtn" class="settings-btn" title="設定">⚙️</button>
         </header>
@@ -65,7 +68,7 @@
                         <option value="zh-TW">繁體中文</option>
                         <option value="en">English</option>
                         <option value="ja">日本語</option>
-                        <option value="ko">한국어</option>
+                        <option value="ko">韓國語</option>
                     </select>
                     
                     <button id="swap" class="swap-btn">⇄</button>
@@ -74,7 +77,7 @@
                         <option value="en">English</option>
                         <option value="zh-TW">繁體中文</option>
                         <option value="ja">日本語</option>
-                        <option value="ko">한국어</option>
+                        <option value="ko">韓國語</option>
                     </select>
                 </div>
 
@@ -89,51 +92,91 @@
                 </div>
 
                 <!-- 翻譯結果框 -->
-                <div class="result-box">
-                    <p id="result" class="placeholder">翻譯結果會顯示在這裡…</p>
-                    <button id="ttsBtn" class="tts-btn" style="display: none;">🔊 朗讀</button>
+                <div class="result-card card">
+                    <span class="box-label">翻譯結果</span>
+                    <div class="result-box">
+                        <p id="result" class="placeholder">翻譯結果會顯示在這裡…</p>
+                        <div class="result-actions">
+                            <button id="ttsBtn" class="tts-btn" style="display: none;">🔊 朗讀</button>
+                            <button id="copyBtn" class="action-btn">📋 複製</button>
+                            <button id="favBtn" class="action-btn">⭐ 收藏</button>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- 麥克風按鈕 -->
-                <button id="micBtn" class="mic-btn">
-                    <span class="mic-icon">🎤</span>
-                    <span class="mic-label">點一下開始說話</span>
-                </button>
+                <!-- 輸入與語音區 -->
+                <div class="input-speech-container">
+                    <!-- 左側文字輸入框 -->
+                    <div class="text-input-area card">
+                        <span class="box-label">輸入文字</span>
+                        <textarea id="inputText" 
+                                   class="text-input" 
+                                   placeholder="或直接輸入要翻譯的文字…" 
+                                   maxlength="500"></textarea>
+                        <div class="input-footer">
+                            <span id="charCount" class="char-count">0/500</span>
+                        </div>
+                    </div>
+
+                    <!-- 右側麥克風卡片 -->
+                    <div class="speech-area card">
+                        <button id="micBtn" class="mic-btn-custom">
+                            <div class="mic-circle">🎙️</div>
+                            <span class="mic-label">點一下開始說話</span>
+                        </button>
+                        <button id="send" class="translate-btn-cta">翻譯 ▶</button>
+                    </div>
+                </div>
 
                 <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
 
-                <!-- 輔助工具網格 (2x2) -->
+                <!-- 快速工具標題 -->
+                <div class="section-title">
+                    <span class="title-line"></span>
+                    <h2>快速工具</h2>
+                </div>
+
+                <!-- 輔助工具網格 -->
                 <div class="tools-grid">
                     <!-- 相機按鈕 -->
-                    <button id="s_camera" style="background: linear-gradient(135deg, #00b4db, #0083b0);">
-                        <span>📷 拍照翻譯</span>
+                    <button id="s_camera" class="tool-card camera-card">
+                        <div class="tool-icon-wrapper">📷</div>
+                        <span class="tool-title">拍照翻譯</span>
+                        <span class="tool-desc">拍照即可翻譯文字</span>
                     </button>
 
                     <!-- 旅遊問答按鈕 -->
-                    <button id="s_ask" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
-                        <span>💬 旅遊問答</span>
+                    <button id="s_ask" class="tool-card ask-card">
+                        <div class="tool-icon-wrapper">💬</div>
+                        <span class="tool-title">旅遊問答</span>
+                        <span class="tool-desc">旅遊資訊快速解答</span>
                     </button>
 
                     <!-- 匯率按鈕 -->
-                    <button id="s_currency" style="background: linear-gradient(135deg, #2ecc71, #27ae60);">
-                        <span>💱 匯率換算</span>
+                    <button id="s_currency" class="tool-card currency-card">
+                        <div class="tool-icon-wrapper">💱</div>
+                        <span class="tool-title">匯率換算</span>
+                        <span class="tool-desc">即時匯率換算</span>
                     </button>
 
                     <!-- 天氣按鈕 -->
-                    <button id="s_weather" style="background: linear-gradient(135deg, #f39c12, #d35400);">
-                        <span>🌤️ 天氣查詢</span>
+                    <button id="s_weather" class="tool-card weather-card">
+                        <div class="tool-icon-wrapper">🌤️</div>
+                        <span class="tool-title">天氣查詢</span>
+                        <span class="tool-desc">查詢目的地天氣</span>
                     </button>
                 </div>
 
-                <!-- 文字輸入框 -->
-                <div class="text-input-area">
-                    <textarea id="inputText" 
-                              class="text-input" 
-                              placeholder="或直接輸入要翻譯的文字…" 
-                              maxlength="500"></textarea>
-                    <div class="input-footer">
-                        <span id="charCount" class="char-count">0/500</span>
-                        <button id="send" class="translate-btn">翻譯 ➤</button>
+                <!-- 最近翻譯 -->
+                <div class="history-section card">
+                    <div class="history-header">
+                        <h2>🕒 最近翻譯</h2>
+                        <button id="clearHistoryBtn" class="clear-history-btn">
+                            清除紀錄 🗑️
+                        </button>
+                    </div>
+                    <div id="historyList" class="history-list">
+                        <!-- 動態插入歷史記錄 -->
                     </div>
                 </div>
             </section>

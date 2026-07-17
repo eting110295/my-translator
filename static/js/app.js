@@ -76,7 +76,61 @@ const setResult = (el, text, isPlaceholder = false) => {
 };
 const pushHistory = (srcText, transText) => {
     console.log('History:', srcText, '->', transText);
+    try {
+        if (!srcText || !transText) return;
+        const historyData = JSON.parse(localStorage.getItem('sweety_translate_history') || '[]');
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        historyData.unshift({ srcText, transText, time: timeStr });
+        if (historyData.length > 20) historyData.pop();
+        localStorage.setItem('sweety_translate_history', JSON.stringify(historyData));
+        renderHistory();
+    } catch (e) {
+        console.error('Save history failed:', e);
+    }
 };
+
+function renderHistory() {
+    const listEl = document.getElementById('historyList');
+    if (!listEl) return;
+    try {
+        const historyData = JSON.parse(localStorage.getItem('sweety_translate_history') || '[]');
+        if (historyData.length === 0) {
+            listEl.innerHTML = '<div class="history-item empty">尚無翻譯紀錄</div>';
+            return;
+        }
+        listEl.innerHTML = historyData.map((item, idx) => `
+            <div class="history-item" onclick="loadHistoryItem(${idx})">
+                <div class="history-item-text">${escapeHtml(item.srcText)}</div>
+                <div class="history-item-time">${item.time} &gt;</div>
+            </div>
+        `).join('');
+    } catch (e) {
+        console.error('Render history failed:', e);
+    }
+}
+
+function loadHistoryItem(idx) {
+    try {
+        const historyData = JSON.parse(localStorage.getItem('sweety_translate_history') || '[]');
+        if (idx >= 0 && idx < historyData.length) {
+            const item = historyData[idx];
+            document.getElementById('inputText').value = item.srcText;
+            document.getElementById('result').textContent = item.transText;
+            document.getElementById('result').classList.remove('placeholder');
+            const ttsBtn = document.getElementById('ttsBtn');
+            if (ttsBtn) ttsBtn.style.display = 'flex';
+            
+            // update char count
+            const charCount = document.getElementById('charCount');
+            if (charCount) charCount.textContent = item.srcText.length + '/500';
+        }
+    } catch (e) {}
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
 
 // OpenCC 簡轉繁轉換器
 let _s2t = null, _s2tReady = false;
@@ -246,6 +300,9 @@ function initApp() {
     // 初始化事件監聽
     setupEventListeners();
 
+    // 渲染歷史記錄
+    renderHistory();
+
     // 初始化單人語音辨識
     initSingleRecognizer();
 
@@ -363,24 +420,26 @@ function setupEventListeners() {
     if (langB) fill(langB, cfg.s_langB || 'en');
     
     // === 切換單人/面對面模式 ===
-    const modeBtn = document.getElementById('modeBtn');
+    const modeSingle = document.getElementById('modeSingle');
+    const modeDouble = document.getElementById('modeDouble');
     const singleView = document.getElementById('singleView');
     const faceView = document.getElementById('faceView');
-    if (modeBtn && singleView && faceView) {
-        modeBtn.onclick = () => {
-            const isSingle = !singleView.classList.contains('hidden');
-            if (isSingle) {
-                // 切換到面對面 (雙人)
+    if (modeSingle && modeDouble && singleView && faceView) {
+        const toggleMode = (toFace) => {
+            if (toFace) {
                 singleView.classList.add('hidden');
                 faceView.classList.remove('hidden');
-                modeBtn.innerHTML = '👥 雙人';
+                modeDouble.classList.add('active');
+                modeSingle.classList.remove('active');
             } else {
-                // 切換到單人
                 faceView.classList.add('hidden');
                 singleView.classList.remove('hidden');
-                modeBtn.innerHTML = '👤 單人';
+                modeSingle.classList.add('active');
+                modeDouble.classList.remove('active');
             }
         };
+        modeSingle.onclick = () => toggleMode(false);
+        modeDouble.onclick = () => toggleMode(true);
     }
     
     // === 設定彈窗控制邏輯 ===
@@ -433,6 +492,9 @@ function setupEventListeners() {
         try {
             const out = await translate(text, NAME[langA.value], NAME[langB.value]);
             result.textContent = out;
+            
+            // 儲存至歷史紀錄
+            pushHistory(text, out);
             
             // 語音朗讀與按鈕連動
             if (ttsBtn) {
@@ -488,6 +550,46 @@ function setupEventListeners() {
     } else if (micBtn && !SpeechRecognition) {
         micBtn.style.opacity = '0.5';
         micBtn.title = '您的瀏覽器不支持語音識別';
+    }
+
+    // 複製按鈕
+    const copyBtn = document.getElementById('copyBtn');
+    if (copyBtn) {
+        copyBtn.onclick = () => {
+            const text = result.textContent.trim();
+            if (!text || text === '翻譯結果會顯示在這裡…' || text === '（翻譯失敗）') {
+                toast('無翻譯結果可複製');
+                return;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                toast('已複製到剪貼簿！');
+            }).catch(err => {
+                console.error('Copy failed:', err);
+            });
+        };
+    }
+
+    // 收藏按鈕
+    const favBtn = document.getElementById('favBtn');
+    if (favBtn) {
+        favBtn.onclick = () => {
+            const text = result.textContent.trim();
+            if (!text || text === '翻譯結果會顯示在這裡…' || text === '（翻譯失敗）') {
+                toast('無翻譯結果可收藏');
+                return;
+            }
+            toast('已加入收藏！');
+        };
+    }
+
+    // 清除歷史記錄按鈕
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    if (clearHistoryBtn) {
+        clearHistoryBtn.onclick = () => {
+            localStorage.removeItem('sweety_translate_history');
+            renderHistory();
+            toast('已清除歷史紀錄');
+        };
     }
 }
 
