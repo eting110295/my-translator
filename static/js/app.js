@@ -179,6 +179,10 @@ class Recognizer {
             showDebugLog('Stopping active recBottom');
             try { recBottom.stop(); } catch(e){}
         }
+        if (typeof askRecognizer !== 'undefined' && askRecognizer && this !== askRecognizer && askRecognizer.active) {
+            showDebugLog('Stopping active askRecognizer');
+            try { askRecognizer.stop(); } catch(e){}
+        }
 
         if (this.active) { 
             showDebugLog('Recognizer is already active, calling stop()');
@@ -1416,7 +1420,7 @@ if ($('ask_mic_btn')) {
             });
         }
         askRecognizer.bcp = BCP[langA.value] || 'zh-TW';
-        askRecognizer.toggle();
+        askRecognizer.start();
     });
 }
 
