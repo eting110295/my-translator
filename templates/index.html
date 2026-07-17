@@ -54,7 +54,7 @@
                 <button id="modeSingle" class="mode-toggle-btn active">👤 單人</button>
                 <button id="modeDouble" class="mode-toggle-btn">👥 雙人</button>
             </div>
-            <h1>Sweety 即時翻譯 <span id="statusDot" class="status-dot"></span></h1>
+            <h1><span class="brand-text">Sweety</span> 即時翻譯 <span id="statusDot" class="status-dot"></span></h1>
             <button id="settingsBtn" class="settings-btn" title="設定">⚙️</button>
         </header>
 
@@ -82,12 +82,12 @@
                 </div>
 
                 <!-- 模式選擇列 -->
-                <div class="engine-bar" style="margin-bottom: 15px; display: flex; justify-content: center; gap: 20px; font-weight: 700; color: var(--text-secondary);">
-                    <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                        <input type="radio" name="engine" value="sentence" checked style="accent-color: var(--accent);"> 逐句翻譯
+                <div class="engine-bar">
+                    <label class="engine-label">
+                        <input type="radio" name="engine" value="sentence" checked class="engine-radio"> 逐句翻譯
                     </label>
-                    <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                        <input type="radio" name="engine" value="live" style="accent-color: var(--accent);"> 即時模式
+                    <label class="engine-label">
+                        <input type="radio" name="engine" value="live" class="engine-radio"> 即時模式
                     </label>
                 </div>
 

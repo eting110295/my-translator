@@ -47,7 +47,7 @@ const cfg = {
     tavilykey: '',
     s_langA: 'zh-TW',
     s_langB: 'en',
-    theme: 'purple'
+    theme: 'ocean'
 };
 
 const BCP = {
@@ -697,7 +697,7 @@ const DEFAULT_CFG = {
     owmkey: '',
     s_langA: 'zh-TW',
     s_langB: 'en',
-    theme: 'purple'
+    theme: 'ocean'
 };
 
 function loadCfg() {
