@@ -165,6 +165,27 @@
                         <span class="tool-title">天氣查詢</span>
                         <span class="tool-desc">查詢目的地天氣</span>
                     </button>
+
+                    <!-- 股價按鈕 -->
+                    <button id="s_stock" class="tool-card stock-card">
+                        <div class="tool-icon-wrapper">📈</div>
+                        <span class="tool-title">股價查詢</span>
+                        <span class="tool-desc">即時股價走勢</span>
+                    </button>
+
+                    <!-- 地圖按鈕 -->
+                    <button id="s_map" class="tool-card map-card">
+                        <div class="tool-icon-wrapper">🗺️</div>
+                        <span class="tool-title">地圖導航</span>
+                        <span class="tool-desc">目的地路線規劃</span>
+                    </button>
+
+                    <!-- 緊急按鈕 -->
+                    <button id="s_emergency" class="tool-card emergency-card">
+                        <div class="tool-icon-wrapper">🚨</div>
+                        <span class="tool-title">緊急聯絡</span>
+                        <span class="tool-desc">當地救援一鍵撥</span>
+                    </button>
                 </div>
 
                 <!-- 最近翻譯 -->
@@ -343,6 +364,58 @@
                 <button id="ask_speak" class="save-btn" style="flex: 1; background: var(--primary-light); color: var(--text-primary); border: 1px solid var(--border); margin-top: 0;">🔊 朗讀</button>
             </div>
             <button id="ask_close" class="save-btn" style="background: #555; margin-top: 15px;">關閉</button>
+        </div>
+    </div>
+
+    <!-- 股價查詢彈窗 -->
+    <div class="modal hidden" id="stockModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span id="stock_close_x" class="close-btn">&times;</span>
+            <h2>📈 股價查詢</h2>
+            <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 12px;">
+                <input type="text" id="stock_symbol" placeholder="例如：2330.TW、AAPL、MSFT…" style="flex: 1; text-transform: uppercase;">
+                <button class="save-btn" id="stock_go" style="margin-top: 0; width: auto; padding: 0 20px; background: #3b82f6; color: #ffffff;">查詢</button>
+            </div>
+            <div id="stock_result" class="hidden" style="margin-top: 15px; text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid var(--border);">
+                <div style="font-size: 1.1rem; font-weight: bold; color: #3b82f6;" id="stock_title">—</div>
+                <div style="font-size: 1.8rem; font-weight: bold; margin-top: 8px;" id="stock_price">—</div>
+                <div style="font-size: 0.95rem; margin-top: 4px;" id="stock_change">—</div>
+            </div>
+            <div id="stock_status" class="hint" style="margin-top: 10px; text-align: center; color: var(--text-secondary);"></div>
+            <button id="stock_close" class="save-btn" style="background: #555; margin-top: 15px;">關閉</button>
+        </div>
+    </div>
+
+    <!-- 地圖導航彈窗 -->
+    <div class="modal hidden" id="mapModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span id="map_close_x" class="close-btn">&times;</span>
+            <h2>🗺️ 地圖導航</h2>
+            <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 12px;">
+                <input type="text" id="map_place" placeholder="輸入目的地：東京鐵塔、台北101…" style="flex: 1;">
+                <button class="save-btn" id="map_go" style="margin-top: 0; width: auto; padding: 0 20px; background: #3b82f6; color: #ffffff;">查詢</button>
+            </div>
+            <div id="map_result" class="hidden" style="margin-top: 15px; text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid var(--border);">
+                <div id="map_summary" style="font-size: 0.95rem; line-height: 1.5; color: var(--text-primary); margin-bottom: 12px; white-space: pre-wrap;"></div>
+                <button id="map_link" class="save-btn" style="margin-top: 0; background: #2563eb; color: #ffffff; display: flex; align-items: center; justify-content: center; gap: 8px;">🚗 開啟 Google 地圖導航</button>
+            </div>
+            <div id="map_status" class="hint" style="margin-top: 10px; text-align: center; color: var(--text-secondary);"></div>
+            <button id="map_close" class="save-btn" style="background: #555; margin-top: 15px;">關閉</button>
+        </div>
+    </div>
+
+    <!-- 緊急聯絡彈窗 -->
+    <div class="modal hidden" id="emergencyModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span id="emergency_close_x" class="close-btn">&times;</span>
+            <h2>🚨 緊急聯絡</h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 15px; line-height: 1.4;">
+                已自動偵測您的翻譯目標國家/地區，為您提供當地的緊急求助電話。請點擊直接撥打：
+            </p>
+            <div id="emergency_list" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- 動態插入緊急電話按鈕 -->
+            </div>
+            <button id="emergency_close" class="save-btn" style="background: #555; margin-top: 20px;">關閉</button>
         </div>
     </div>
 

@@ -1405,7 +1405,7 @@ if ($('ask_close_x')) $('ask_close_x').addEventListener('click', closeAsk);
 // --- 歷史記錄狀態管理以支援手機返回鍵關閉彈窗 ---
 window.addEventListener('popstate', (e) => {
     // 當使用者按下手機返回鍵時，自動關閉所有開啟的彈窗而非離開網頁
-    if (!visionModal.classList.contains('hidden')) {
+    if (typeof visionModal !== 'undefined' && visionModal && !visionModal.classList.contains('hidden')) {
         stopAllAudio();
         setVisionSpeakBtn(false);
         visionModal.classList.add('hidden');
@@ -1429,5 +1429,182 @@ window.addEventListener('popstate', (e) => {
         setAskSpeakBtn(false);
         askModal.classList.add('hidden');
     }
+    const stockModal = $('stockModal');
+    if (stockModal && !stockModal.classList.contains('hidden')) {
+        stockModal.classList.add('hidden');
+    }
+    const mapModal = $('mapModal');
+    if (mapModal && !mapModal.classList.contains('hidden')) {
+        mapModal.classList.add('hidden');
+    }
+    const emergencyModal = $('emergencyModal');
+    if (emergencyModal && !emergencyModal.classList.contains('hidden')) {
+        emergencyModal.classList.add('hidden');
+    }
 });
+
+
+/* =========================================================
+   股價查詢
+   ========================================================= */
+async function doStockQuery() {
+    const symbol = $('stock_symbol').value.trim();
+    if (!symbol) { $('stock_status').textContent = '請輸入股價代號'; return; }
+    $('stock_result').classList.add('hidden');
+    $('stock_status').textContent = '查詢中…';
+    try {
+        const res = await fetch('/api/stock', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ symbol }),
+        });
+        const d = await res.json();
+        if (!d.ok) throw new Error(d.error || '查詢失敗');
+        $('stock_title').textContent = `${d.symbol} 市場常規價格`;
+        $('stock_price').textContent = `${d.price} ${d.currency}`;
+        const isUp = d.change >= 0;
+        $('stock_change').innerHTML = `<span style="color: ${isUp ? '#2dd4bf' : '#ff4d4d'}; font-weight: bold;">${isUp ? '▲' : '▼'} ${Math.abs(d.change)} (${d.percent}%)</span>`;
+        $('stock_result').classList.remove('hidden');
+        $('stock_status').textContent = '';
+    } catch (e) { $('stock_status').textContent = '❌ ' + e.message; }
+}
+
+if ($('s_stock')) {
+    $('s_stock').addEventListener('click', () => {
+        $('stock_symbol').value = '';
+        $('stock_result').classList.add('hidden');
+        $('stock_status').textContent = '';
+        history.pushState({ modal: 'stock' }, '');
+        $('stockModal').classList.remove('hidden');
+    });
+}
+if ($('stock_go')) $('stock_go').addEventListener('click', doStockQuery);
+if ($('stock_symbol')) {
+    $('stock_symbol').addEventListener('keydown', (e) => { if (e.key === 'Enter') doStockQuery(); });
+}
+const closeStock = () => {
+    $('stockModal').classList.add('hidden');
+    if (history.state && history.state.modal === 'stock') {
+        history.back();
+    }
+};
+if ($('stock_close')) $('stock_close').addEventListener('click', closeStock);
+if ($('stock_close_x')) $('stock_close_x').addEventListener('click', closeStock);
+
+
+/* =========================================================
+   地圖導航
+   ========================================================= */
+async function doMapQuery() {
+    const place = $('map_place').value.trim();
+    if (!place) { $('map_status').textContent = '請輸入目的地'; return; }
+    $('map_result').classList.add('hidden');
+    $('map_status').textContent = '景點分析中…';
+    try {
+        // 呼叫旅遊問答的後端 API 來幫我們做景點簡介
+        const res = await fetch('/api/ask', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                question: `介紹景點 ${place} 及其交通路線，以繁體中文回答，不超過 60 字。`,
+                target: 'Traditional Chinese',
+                tavily_key: cfg.tavilykey || '',
+                ...providerBody(),
+            }),
+        });
+        const d = await res.json();
+        if (!d.ok) throw new Error(d.error || '分析失敗');
+        $('map_summary').textContent = d.answer || '景點簡介載入中...';
+        
+        // 設定 Google Maps 連結
+        $('map_link').onclick = () => {
+            window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}`, '_blank');
+        };
+        
+        $('map_result').classList.remove('hidden');
+        $('map_status').textContent = '';
+    } catch (e) { 
+        // 失敗時僅提供導航按鈕
+        $('map_summary').textContent = '導航連結已備妥，請直接開啟：';
+        $('map_link').onclick = () => {
+            window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}`, '_blank');
+        };
+        $('map_result').classList.remove('hidden');
+        $('map_status').textContent = '';
+    }
+}
+
+if ($('s_map')) {
+    $('s_map').addEventListener('click', () => {
+        $('map_place').value = '';
+        $('map_result').classList.add('hidden');
+        $('map_status').textContent = '';
+        history.pushState({ modal: 'map' }, '');
+        $('mapModal').classList.remove('hidden');
+    });
+}
+if ($('map_go')) $('map_go').addEventListener('click', doMapQuery);
+if ($('map_place')) {
+    $('map_place').addEventListener('keydown', (e) => { if (e.key === 'Enter') doMapQuery(); });
+}
+const closeMap = () => {
+    $('mapModal').classList.add('hidden');
+    if (history.state && history.state.modal === 'map') {
+        history.back();
+    }
+};
+if ($('map_close')) $('map_close').addEventListener('click', closeMap);
+if ($('map_close_x')) $('map_close_x').addEventListener('click', closeMap);
+
+
+/* =========================================================
+   緊急聯絡
+   ========================================================= */
+const EMERGENCY_NUMBERS = {
+    'zh-TW': { country: '台灣 (Taiwan)', police: '110', ambulance: '119', fire: '119' },
+    'en': { country: '美國 (United States)', police: '911', ambulance: '911', fire: '911' },
+    'ja': { country: '日本 (Japan)', police: '110', ambulance: '119', fire: '119' },
+    'ko': { country: '韓國 (South Korea)', police: '112', ambulance: '119', fire: '119' },
+    'vi': { country: '越南 (Vietnam)', police: '113', ambulance: '115', fire: '114' },
+    'de': { country: '德國 (Germany)', police: '112', ambulance: '112', fire: '112' },
+};
+
+function renderEmergencyNumbers() {
+    const listEl = $('emergency_list');
+    if (!listEl) return;
+    
+    const tgtLang = (langB && langB.value) || cfg.s_langB || 'en';
+    const info = EMERGENCY_NUMBERS[tgtLang] || EMERGENCY_NUMBERS['en'];
+    
+    listEl.innerHTML = `
+        <div style="font-size: 1rem; font-weight: bold; color: #ff4d4d; margin-bottom: 8px; text-align: center;">📍 當前國家/地區：${info.country}</div>
+        <a href="tel:${info.police}" style="text-decoration: none;">
+            <button class="save-btn" style="margin-top: 0; background: #ef4444; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1.05rem; border: none;">📞 報警撥打：${info.police}</button>
+        </a>
+        <a href="tel:${info.ambulance}" style="text-decoration: none;">
+            <button class="save-btn" style="margin-top: 0; background: #ea580c; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1.05rem; border: none;">🚑 救護車撥打：${info.ambulance}</button>
+        </a>
+        ${info.ambulance !== info.fire ? `
+        <a href="tel:${info.fire}" style="text-decoration: none;">
+            <button class="save-btn" style="margin-top: 0; background: #dc2626; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1.05rem; border: none;">🔥 消防局撥打：${info.fire}</button>
+        </a>` : ''}
+    `;
+}
+
+if ($('s_emergency')) {
+    $('s_emergency').addEventListener('click', () => {
+        renderEmergencyNumbers();
+        history.pushState({ modal: 'emergency' }, '');
+        $('emergencyModal').classList.remove('hidden');
+    });
+}
+const closeEmergency = () => {
+    $('emergencyModal').classList.add('hidden');
+    if (history.state && history.state.modal === 'emergency') {
+        history.back();
+    }
+};
+if ($('emergency_close')) $('emergency_close').addEventListener('click', closeEmergency);
+if ($('emergency_close_x')) $('emergency_close_x').addEventListener('click', closeEmergency);
+
 

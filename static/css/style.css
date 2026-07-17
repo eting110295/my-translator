@@ -1589,6 +1589,45 @@ html, body {
     border-color: rgba(245, 158, 11, 0.45) !important;
 }
 
+.stock-card {
+    background: #0e2229 !important;
+    border: 1px solid rgba(13, 148, 136, 0.22) !important;
+}
+.stock-card .tool-icon-wrapper {
+    background: rgba(13, 148, 136, 0.18);
+    color: #2dd4bf;
+}
+.stock-card:hover {
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15) !important;
+    border-color: rgba(13, 148, 136, 0.45) !important;
+}
+
+.map-card {
+    background: #261e13 !important;
+    border: 1px solid rgba(234, 179, 8, 0.22) !important;
+}
+.map-card .tool-icon-wrapper {
+    background: rgba(234, 179, 8, 0.18);
+    color: #fef08a;
+}
+.map-card:hover {
+    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.15) !important;
+    border-color: rgba(234, 179, 8, 0.45) !important;
+}
+
+.emergency-card {
+    background: #2a0f10 !important;
+    border: 1px solid rgba(239, 68, 68, 0.22) !important;
+}
+.emergency-card .tool-icon-wrapper {
+    background: rgba(239, 68, 68, 0.18);
+    color: #fca5a5;
+}
+.emergency-card:hover {
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15) !important;
+    border-color: rgba(239, 68, 68, 0.45) !important;
+}
+
 /* History Section */
 .history-section {
     display: flex;

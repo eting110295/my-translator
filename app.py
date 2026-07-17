@@ -385,6 +385,53 @@ def api_currency():
     return jsonify({"ok": False, "error": f"查不到 {base}→{target} 匯率（請確認幣別代碼）"}), 400
 
 
+# ===== 6b. 股價 API =====
+@app.route('/api/stock', methods=['POST'])
+def api_stock():
+    data = request.get_json(force=True, silent=True) or {}
+    symbol = (data.get('symbol') or 'AAPL').strip().upper()
+    if not symbol:
+        return jsonify({"ok": False, "error": "請輸入股價代號"}), 400
+    
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+    try:
+        r = requests.get(url, headers=headers, timeout=10)
+        r.raise_for_status()
+        res = r.json()
+        result = res.get('chart', {}).get('result')
+        if not result:
+            return jsonify({"ok": False, "error": f"找不到股價代號 {symbol}（例如：台股 2330.TW，美股 AAPL）"}), 400
+            
+        meta = result[0].get('meta', {})
+        price = meta.get('regularMarketPrice')
+        currency = meta.get('currency', 'USD')
+        prev_close = meta.get('chartPreviousClose')
+        
+        if price is None:
+            return jsonify({"ok": False, "error": f"無法取得 {symbol} 當前價格"}), 400
+            
+        if prev_close is None:
+            prev_close = price
+            
+        change = price - prev_close
+        pct = (change / prev_close) * 100 if prev_close else 0.0
+        
+        return jsonify({
+            "ok": True,
+            "symbol": symbol,
+            "price": round(price, 4),
+            "currency": currency,
+            "change": round(change, 4),
+            "percent": round(pct, 2)
+        })
+    except Exception as e:
+        logger.error(f"stock query failed for {symbol}: {e}")
+        return jsonify({"ok": False, "error": f"查詢失敗：請檢查代號是否正確（美股如 AAPL，台股如 2330.TW）"}), 400
+
+
 # ===== 7. 天氣 API =====
 WMO_CODES = {
     0: "晴天 ☀️", 1: "大致晴朗 🌤️", 2: "部分多雲 ⛅", 3: "陰天 ☁️",
