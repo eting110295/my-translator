@@ -186,6 +186,13 @@
                         <span class="tool-title">緊急聯絡</span>
                         <span class="tool-desc">當地救援一鍵撥</span>
                     </button>
+
+                    <!-- 句庫按鈕 -->
+                    <button id="s_phrases" class="tool-card phrase-card">
+                        <div class="tool-icon-wrapper">📖</div>
+                        <span class="tool-title">實用句庫</span>
+                        <span class="tool-desc">常用旅行例句朗讀</span>
+                    </button>
                 </div>
 
                 <!-- 最近翻譯 -->
@@ -350,8 +357,9 @@
         <div class="modal-content" style="max-width: 500px;">
             <span id="ask_close_x" class="close-btn">&times;</span>
             <h2>💬 旅遊問答</h2>
-            <div class="form-group">
-                <textarea id="ask_q" class="text-input" placeholder="想問什麼旅遊問題？例如：淺草附近有什麼好吃的" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(212,175,55,0.25); border-radius: 10px; min-height: 80px;"></textarea>
+            <div class="form-group" style="position: relative;">
+                <textarea id="ask_q" class="text-input" placeholder="想問什麼旅遊問題？例如：淺草附近有什麼好吃的" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(212,175,55,0.25); border-radius: 10px; min-height: 80px; padding-bottom: 40px;"></textarea>
+                <button id="ask_mic_btn" style="position: absolute; bottom: 8px; right: 8px; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px; border: none; outline: none; transition: opacity 0.3s;">🎙️ 語音輸入</button>
             </div>
             <div id="ask_status" class="hint" style="margin-top: 5px; text-align: center; color: var(--text-secondary);"></div>
             
@@ -416,6 +424,30 @@
                 <!-- 動態插入緊急電話按鈕 -->
             </div>
             <button id="emergency_close" class="save-btn" style="background: #555; margin-top: 20px;">關閉</button>
+        </div>
+    </div>
+
+    <!-- 常用句庫彈窗 -->
+    <div class="modal hidden" id="phraseModal">
+        <div class="modal-content" style="max-width: 400px; max-height: 85vh; display: flex; flex-direction: column;">
+            <span id="phrase_close_x" class="close-btn">&times;</span>
+            <h2>📖 實用旅用句</h2>
+            <div class="form-group" style="margin-bottom: 12px; flex-shrink: 0;">
+                <label for="phrase_category" style="font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 6px;">選擇場景分類：</label>
+                <select id="phrase_category" class="lang-select" style="width: 100%;">
+                    <option value="greetings">👋 問候禮貌</option>
+                    <option value="dining">🍴 餐飲點餐</option>
+                    <option value="transit">🚌 交通搭乘</option>
+                    <option value="emergency">🆘 緊急求助</option>
+                </select>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 15px; flex-shrink: 0;">
+                點擊句子可以直接用目標語言語音朗讀（TTS）發音：
+            </p>
+            <div id="phrase_list" style="display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex-grow: 1; padding-right: 4px;">
+                <!-- 動態插入常用句 -->
+            </div>
+            <button id="phrase_close" class="save-btn" style="background: #555; margin-top: 20px; flex-shrink: 0;">關閉</button>
         </div>
     </div>
 

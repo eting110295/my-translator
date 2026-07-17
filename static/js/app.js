@@ -1391,9 +1391,41 @@ if ($('ask_speak')) {
         speak(lastAskText, byId(cfg.s_langA || 'zh-TW').bcp, true, () => setAskSpeakBtn(false));
     });
 }
+let askRecognizer = null;
+if ($('ask_mic_btn')) {
+    $('ask_mic_btn').addEventListener('click', () => {
+        ensureAudioUnlocked();
+        if (!askRecognizer) {
+            askRecognizer = new Recognizer({
+                bcp: BCP[langA.value] || 'zh-TW',
+                onInterim: (t) => {
+                    $('ask_q').value = t;
+                },
+                onDone: (t) => {
+                    $('ask_q').value = t.trim();
+                    if (t.trim()) doAsk();
+                },
+                onState: (on) => {
+                    const btn = $('ask_mic_btn');
+                    if (btn) {
+                        btn.style.background = on ? 'rgba(239, 68, 68, 0.25)' : 'rgba(59, 130, 246, 0.15)';
+                        btn.style.borderColor = on ? 'rgba(239, 68, 68, 0.4)' : 'rgba(59, 130, 246, 0.3)';
+                        btn.textContent = on ? '⏹ 停止' : '🎙️ 語音輸入';
+                    }
+                }
+            });
+        }
+        askRecognizer.bcp = BCP[langA.value] || 'zh-TW';
+        askRecognizer.toggle();
+    });
+}
+
 const closeAsk = () => {
     stopAllAudio();
     setAskSpeakBtn(false);
+    if (askRecognizer && askRecognizer.active) {
+        askRecognizer.stop();
+    }
     $('askModal').classList.add('hidden');
     if (history.state && history.state.modal === 'ask') {
         history.back();
@@ -1427,6 +1459,9 @@ window.addEventListener('popstate', (e) => {
     if (askModal && !askModal.classList.contains('hidden')) {
         stopAllAudio();
         setAskSpeakBtn(false);
+        if (askRecognizer && askRecognizer.active) {
+            askRecognizer.stop();
+        }
         askModal.classList.add('hidden');
     }
     const stockModal = $('stockModal');
@@ -1440,6 +1475,11 @@ window.addEventListener('popstate', (e) => {
     const emergencyModal = $('emergencyModal');
     if (emergencyModal && !emergencyModal.classList.contains('hidden')) {
         emergencyModal.classList.add('hidden');
+    }
+    const phraseModal = $('phraseModal');
+    if (phraseModal && !phraseModal.classList.contains('hidden')) {
+        stopAllAudio();
+        phraseModal.classList.add('hidden');
     }
 });
 
@@ -1606,5 +1646,98 @@ const closeEmergency = () => {
 };
 if ($('emergency_close')) $('emergency_close').addEventListener('click', closeEmergency);
 if ($('emergency_close_x')) $('emergency_close_x').addEventListener('click', closeEmergency);
+
+
+/* =========================================================
+   實用句庫
+   ========================================================= */
+const PHRASE_TEMPLATES = {
+    greetings: ["你好", "謝謝", "不好意思 / 麻煩一下", "請幫我拍照", "請問..."],
+    dining: ["請給我菜單", "我想點這個", "請結帳 (買單)", "有熱水嗎", "我不吃香菜"],
+    transit: ["請問車票多少錢", "這班車去哪裡", "捷運站在哪裡", "離這裡遠嗎", "我想去這個地址"],
+    emergency: ["請幫幫我", "我迷路了", "我的錢包不見了", "有會說中文的人嗎", "需要看醫生"]
+};
+
+let translatedPhrasesCache = {};
+
+async function renderPhrases() {
+    const cat = $('phrase_category').value;
+    const listEl = $('phrase_list');
+    if (!listEl) return;
+    
+    const phrases = PHRASE_TEMPLATES[cat] || [];
+    const srcName = NAME[langA.value] || 'Traditional Chinese';
+    const tgtId = langB.value;
+    const tgtName = NAME[tgtId] || 'English';
+    const tgtBcp = BCP[tgtId] || 'en-US';
+    
+    listEl.innerHTML = phrases.map((ph, idx) => {
+        const cacheKey = `${tgtId}_${cat}_${idx}`;
+        const trans = translatedPhrasesCache[cacheKey] || '翻譯載入中…';
+        return `
+            <button class="save-btn phrase-item-btn" data-text="${escapeHtml(trans)}" data-bcp="${tgtBcp}" data-key="${cacheKey}" data-source="${escapeHtml(ph)}" style="margin-top: 0; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.06); color: white; display: flex; flex-direction: column; align-items: flex-start; padding: 10px 14px; text-align: left; border-radius: 10px; gap: 4px; width: 100%; cursor: pointer;">
+                <span style="font-size: 0.78rem; color: var(--text-secondary);">${ph}</span>
+                <span class="phrase-trans-text" style="font-size: 0.95rem; font-weight: 700; color: #c084fc;">${trans}</span>
+            </button>
+        `;
+    }).join('');
+    
+    // Async translate each phrase
+    phrases.forEach(async (ph, idx) => {
+        const cacheKey = `${tgtId}_${cat}_${idx}`;
+        if (translatedPhrasesCache[cacheKey]) return; // Already cached
+        
+        try {
+            const transText = await translate(ph, srcName, tgtName);
+            translatedPhrasesCache[cacheKey] = transText;
+            
+            // Find the button and update it
+            const btn = listEl.querySelector(`[data-key="${cacheKey}"]`);
+            if (btn) {
+                btn.setAttribute('data-text', transText);
+                const span = btn.querySelector('.phrase-trans-text');
+                if (span) span.textContent = transText;
+            }
+        } catch(e) {
+            const btn = listEl.querySelector(`[data-key="${cacheKey}"]`);
+            if (btn) {
+                const span = btn.querySelector('.phrase-trans-text');
+                if (span) span.textContent = '(翻譯失敗)';
+            }
+        }
+    });
+}
+
+if ($('s_phrases')) {
+    $('s_phrases').addEventListener('click', () => {
+        history.pushState({ modal: 'phrase' }, '');
+        $('phraseModal').classList.remove('hidden');
+        renderPhrases();
+    });
+}
+if ($('phrase_category')) {
+    $('phrase_category').addEventListener('change', renderPhrases);
+}
+if ($('phrase_list')) {
+    $('phrase_list').addEventListener('click', (e) => {
+        const btn = e.target.closest('.phrase-item-btn');
+        if (!btn) return;
+        const text = btn.getAttribute('data-text');
+        const bcp = btn.getAttribute('data-bcp');
+        if (text && text !== '翻譯載入中…' && text !== '(翻譯失敗)') {
+            ensureAudioUnlocked();
+            speak(text, bcp);
+        }
+    });
+}
+const closePhrase = () => {
+    stopAllAudio();
+    $('phraseModal').classList.add('hidden');
+    if (history.state && history.state.modal === 'phrase') {
+        history.back();
+    }
+};
+if ($('phrase_close')) $('phrase_close').addEventListener('click', closePhrase);
+if ($('phrase_close_x')) $('phrase_close_x').addEventListener('click', closePhrase);
 
 

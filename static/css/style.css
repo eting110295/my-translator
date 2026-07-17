@@ -1628,6 +1628,19 @@ html, body {
     border-color: rgba(239, 68, 68, 0.45) !important;
 }
 
+.phrase-card {
+    background: #181c2b !important;
+    border: 1px solid rgba(168, 85, 247, 0.22) !important;
+}
+.phrase-card .tool-icon-wrapper {
+    background: rgba(168, 85, 247, 0.18);
+    color: #c084fc;
+}
+.phrase-card:hover {
+    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.15) !important;
+    border-color: rgba(168, 85, 247, 0.45) !important;
+}
+
 /* History Section */
 .history-section {
     display: flex;
