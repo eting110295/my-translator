@@ -377,20 +377,34 @@
 
     <!-- 股價查詢彈窗 -->
     <div class="modal hidden" id="stockModal">
-        <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-content" style="max-width: 420px; max-height: 85vh; display: flex; flex-direction: column;">
             <span id="stock_close_x" class="close-btn">&times;</span>
-            <h2>📈 股價查詢</h2>
-            <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 12px;">
-                <input type="text" id="stock_symbol" placeholder="例如：2330.TW、AAPL、MSFT…" style="flex: 1; text-transform: uppercase;">
-                <button class="save-btn" id="stock_go" style="margin-top: 0; width: auto; padding: 0 20px; background: #3b82f6; color: #ffffff;">查詢</button>
+            <h2 style="flex-shrink: 0; margin-bottom: 12px;">📊 今日主要股市行情</h2>
+            
+            <!-- 熱門大盤與權值股行情區 -->
+            <div id="market_section" style="flex-grow: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 4px; display: flex; flex-direction: column; gap: 8px;">
+                <div id="market_list" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="text-align: center; color: var(--text-secondary); font-size: 0.85rem; padding: 15px 0;">行情載入中…</div>
+                </div>
             </div>
-            <div id="stock_result" class="hidden" style="margin-top: 15px; text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid var(--border);">
-                <div style="font-size: 1.1rem; font-weight: bold; color: #3b82f6;" id="stock_title">—</div>
-                <div style="font-size: 1.8rem; font-weight: bold; margin-top: 8px;" id="stock_price">—</div>
-                <div style="font-size: 0.95rem; margin-top: 4px;" id="stock_change">—</div>
+
+            <!-- 個股自訂查詢區 -->
+            <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; flex-shrink: 0;">
+                <h3 style="font-size: 0.85rem; margin-bottom: 8px; color: var(--text-primary);">🔍 搜尋其他個股代號</h3>
+                <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 0;">
+                    <input type="text" id="stock_symbol" placeholder="例：2317.TW (鴻海)、TSLA (特斯拉)" style="flex: 1; text-transform: uppercase; font-size: 0.85rem; padding: 8px 12px;">
+                    <button class="save-btn" id="stock_go" style="margin-top: 0; width: auto; padding: 0 15px; background: #3b82f6; color: #ffffff; font-size: 0.85rem;">查詢</button>
+                </div>
             </div>
-            <div id="stock_status" class="hint" style="margin-top: 10px; text-align: center; color: var(--text-secondary);"></div>
-            <button id="stock_close" class="save-btn" style="background: #555; margin-top: 15px;">關閉</button>
+
+            <div id="stock_result" class="hidden" style="margin-top: 12px; text-align: left; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; border: 1px solid var(--border); flex-shrink: 0;">
+                <div style="font-size: 0.95rem; font-weight: bold; color: #3b82f6;" id="stock_title">—</div>
+                <div style="font-size: 1.4rem; font-weight: bold; margin-top: 4px;" id="stock_price">—</div>
+                <div style="font-size: 0.85rem; margin-top: 2px;" id="stock_change">—</div>
+            </div>
+            
+            <div id="stock_status" class="hint" style="margin-top: 8px; text-align: center; color: var(--text-secondary); flex-shrink: 0;"></div>
+            <button id="stock_close" class="save-btn" style="background: #555; margin-top: 15px; flex-shrink: 0;">關閉</button>
         </div>
     </div>
 

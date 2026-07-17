@@ -1485,8 +1485,41 @@ window.addEventListener('popstate', (e) => {
 
 
 /* =========================================================
-   股價查詢
+   股價查詢 與 今日行情
    ========================================================= */
+async function loadMarketStats() {
+    const listEl = $('market_list');
+    if (!listEl) return;
+    listEl.innerHTML = '<div style="text-align: center; color: var(--text-secondary); font-size: 0.85rem; padding: 15px 0;">📊 行情刷新中…</div>';
+    
+    try {
+        const res = await fetch('/api/stock/market');
+        const d = await res.json();
+        if (!d.ok) throw new Error(d.error || '載入失敗');
+        
+        listEl.innerHTML = d.data.map(item => {
+            const isUp = item.change >= 0;
+            const sign = isUp ? '▲' : '▼';
+            const color = isUp ? '#2dd4bf' : '#ff4d4d'; // 美麗的亮綠/紅色
+            
+            return `
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px;">
+                    <div>
+                        <div style="font-size: 0.85rem; font-weight: bold; color: var(--text-primary);">${item.name}</div>
+                        <div style="font-size: 0.7rem; color: var(--text-secondary);">${item.symbol}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.9rem; font-weight: bold; color: var(--text-primary);">${item.price} <span style="font-size: 0.7rem; color: var(--text-secondary); font-weight: normal;">${item.currency}</span></div>
+                        <div style="font-size: 0.75rem; font-weight: bold; color: ${color};">${sign} ${Math.abs(item.change)} (${item.percent}%)</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch(e) {
+        listEl.innerHTML = `<div style="text-align: center; color: #ff4d4d; font-size: 0.85rem; padding: 15px 0;">❌ 行情載入失敗 (${e.message})</div>`;
+    }
+}
+
 async function doStockQuery() {
     const symbol = $('stock_symbol').value.trim();
     if (!symbol) { $('stock_status').textContent = '請輸入股價代號'; return; }
@@ -1516,6 +1549,7 @@ if ($('s_stock')) {
         $('stock_status').textContent = '';
         history.pushState({ modal: 'stock' }, '');
         $('stockModal').classList.remove('hidden');
+        loadMarketStats(); // 彈窗打開時自動加載今日大盤行情！
     });
 }
 if ($('stock_go')) $('stock_go').addEventListener('click', doStockQuery);

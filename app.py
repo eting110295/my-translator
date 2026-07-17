@@ -386,6 +386,51 @@ def api_currency():
 
 
 # ===== 6b. 股價 API =====
+@app.route('/api/stock/market', methods=['GET'])
+def api_stock_market():
+    symbols = "^TWII,2330.TW,2317.TW,^GSPC,^IXIC,TSM"
+    url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={symbols}"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+    try:
+        r = requests.get(url, headers=headers, timeout=10)
+        r.raise_for_status()
+        res = r.json()
+        result = res.get('quoteResponse', {}).get('result', [])
+        
+        name_map = {
+            "^TWII": "台股加權指數",
+            "2330.TW": "台積電 (2330)",
+            "2317.TW": "鴻海 (2317)",
+            "^GSPC": "美股標普 500",
+            "^IXIC": "美股那斯達克",
+            "TSM": "台積電 ADR (TSM)"
+        }
+        
+        data = []
+        for item in result:
+            sym = item.get('symbol')
+            price = item.get('regularMarketPrice')
+            change = item.get('regularMarketChange', 0)
+            pct = item.get('regularMarketChangePercent', 0)
+            currency = item.get('currency', 'USD')
+            
+            data.append({
+                "symbol": sym,
+                "name": name_map.get(sym, item.get('shortName', sym)),
+                "price": round(price, 2) if price is not None else None,
+                "change": round(change, 2) if change is not None else 0,
+                "percent": round(pct, 2) if pct is not None else 0,
+                "currency": currency
+            })
+            
+        return jsonify({"ok": True, "data": data})
+    except Exception as e:
+        logger.error(f"market stock query failed: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 @app.route('/api/stock', methods=['POST'])
 def api_stock():
     data = request.get_json(force=True, silent=True) or {}
