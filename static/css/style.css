@@ -1749,7 +1749,7 @@ html, body {
     height: 50%;
     display: flex;
     flex-direction: column;
-    padding: 16px;
+    padding: 8px 12px;
     overflow: hidden; /* Prevent panels from stretching */
 }
 
@@ -1767,9 +1767,20 @@ html, body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     height: 100%;
     overflow: hidden;
+}
+
+#faceView .lang-select {
+    width: auto !important;
+    max-width: 140px !important;
+    align-self: center !important;
+    padding: 5px 10px !important;
+    font-size: 0.82rem !important;
+    border-radius: 8px !important;
+    height: auto !important;
+    font-weight: 700;
 }
 
 .face-result {
@@ -1790,10 +1801,13 @@ html, body {
 }
 
 .face-mic {
-    padding: 10px 20px !important;
-    font-size: 0.9rem !important;
-    border-radius: 20px !important;
+    padding: 6px 16px !important;
+    font-size: 0.8rem !important;
+    border-radius: 12px !important;
     flex-shrink: 0;
+    align-self: center !important;
+    width: auto !important;
+    min-width: 110px !important;
 }
 
 .face-divider {
