@@ -1781,6 +1781,7 @@ html, body {
     border-radius: 8px !important;
     height: auto !important;
     font-weight: 700;
+    flex: none !important; /* 確保不會在 column 容器中被垂直拉伸 */
 }
 
 .face-result {
