@@ -191,7 +191,7 @@ html, body {
     border-radius: 1rem;
     overflow-y: auto;
     line-height: 1.6;
-    font-size: 1.1rem;
+    font-size: 1.25rem;
     position: relative; /* 用於定位朗讀按鈕 */
 }
 
@@ -247,7 +247,7 @@ html, body {
 
 .tools-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 0.5rem;
     margin-top: 0.75rem;
     margin-bottom: 0.75rem;
@@ -609,7 +609,8 @@ html, body {
 }
 
 .face-result {
-    font-size: 1.3rem !important;
+    font-size: 1.6rem !important;
+    font-weight: 500;
     flex: 1;
     overflow-y: auto;
     margin: 0 !important;
@@ -1492,7 +1493,7 @@ html, body {
 
 .tools-grid {
     display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr)) !important;
+    grid-template-columns: repeat(4, 1fr) !important;
     gap: 0.5rem !important;
     margin-top: 0.5rem !important;
     margin-bottom: 0.75rem !important;
@@ -1789,7 +1790,7 @@ html, body {
 
 .face-result {
     flex: 1;
-    min-height: 5rem !important;
+    min-height: 0 !important;
     overflow-y: auto !important; /* Allow scroll inside result only */
     background: rgba(255, 255, 255, 0.02) !important;
     border: 1px solid rgba(255, 255, 255, 0.04) !important;
