@@ -265,12 +265,12 @@ class Recognizer {
    語言清單
    ============================================ */
 const LANGS = [
-    { id: 'zh-TW', label: '繁體中文' },
-    { id: 'en', label: 'English' },
-    { id: 'ja', label: '日本語' },
-    { id: 'ko', label: '韓國語' },
-    { id: 'vi', label: 'Tiếng Việt' },
-    { id: 'de', label: 'Deutsch' },
+    { id: 'zh-TW', label: '🇹🇼 繁體中文' },
+    { id: 'en', label: '🇺🇸 English' },
+    { id: 'ja', label: '🇯🇵 日本語' },
+    { id: 'ko', label: '🇰🇷 韓國語' },
+    { id: 'vi', label: '🇻🇳 Tiếng Việt' },
+    { id: 'de', label: '🇩🇪 Deutsch' },
 ];
 
 /* 語言代碼對應給模型看的名稱 */

@@ -1756,7 +1756,6 @@ html, body {
 .face-panel.top {
     transform: rotate(180deg); /* Flip 180° for opposite person */
     background: rgba(59, 130, 246, 0.03);
-    border-bottom: 1.5px solid rgba(59, 130, 246, 0.18);
 }
 
 .face-panel.bottom {
@@ -1806,24 +1805,23 @@ html, body {
     font-size: 0.8rem !important;
     border-radius: 12px !important;
     flex-shrink: 0;
-    align-self: center !important;
     width: auto !important;
     min-width: 110px !important;
 }
 
+.face-panel.top .face-mic {
+    align-self: flex-end !important;
+}
+
+.face-panel.bottom .face-mic {
+    align-self: flex-start !important;
+}
+
 .face-divider {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 0;
-    background: rgba(0, 0, 0, 0.4);
-    border-top: 1px solid rgba(59, 130, 246, 0.15);
-    border-bottom: 1px solid rgba(59, 130, 246, 0.15);
-    font-size: 11px;
-    color: #8da2c4;
-    font-weight: 700;
-    letter-spacing: 1px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
+    margin: 4px 0;
 }
 
 /* Remove content padding when faceView is active for border-to-border layout */
