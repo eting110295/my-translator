@@ -21,18 +21,7 @@ window.onerror = function(message, source, lineno, colno, error) {
 // 全域 Debug 日誌顯示（幫助動態了解瀏覽器端運行狀態）
 function showDebugLog(msg) {
     console.log('[DEBUG LOG]:', msg);
-    let logDiv = document.getElementById('debugLogBox');
-    if (!logDiv) {
-        logDiv = document.createElement('div');
-        logDiv.id = 'debugLogBox';
-        logDiv.style.cssText = 'position:fixed;bottom:0.625rem;right:0.625rem;width:18.75rem;max-height:12.5rem;overflow-y:auto;background:rgba(0,0,0,0.85);color:#00ff00;padding:0.625rem;z-index:9999;font-size:0.6875rem;font-family:monospace;border-radius:0.3125rem;border:1px solid #00ff00;word-break:break-all;';
-        document.body.appendChild(logDiv);
-    }
-    const p = document.createElement('p');
-    p.style.margin = '0.125rem 0';
-    p.textContent = new Date().toLocaleTimeString() + ': ' + msg;
-    logDiv.appendChild(p);
-    logDiv.scrollTop = logDiv.scrollHeight;
+    // 視覺化的 debug 視窗已依需求隱藏
 }
 
 /* ============================================
