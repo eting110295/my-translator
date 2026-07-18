@@ -2,6 +2,11 @@
    CSS 骨架：深紫色漸層背景 + 金色重點
    ============================================ */
 
+html {
+    /* 基準設計 360dp = 16px (1rem)。隨著視窗縮放等比例調整所有單位。 */
+    font-size: clamp(12px, calc(100vw / 360 * 16), 28px);
+}
+
 :root {
     /* 預設色票：紫金 */
     --bg1: #1a1030;
@@ -94,7 +99,7 @@ html, body {
 
 /* ============ 頂部標題列 ============ */
 .topbar {
-    padding: 16px 20px;
+    padding: 1rem 1.25rem;
     border-bottom: 1px solid var(--border);
     background: rgba(0, 0, 0, 0.2);
     text-align: center;
@@ -115,24 +120,24 @@ html, body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 20px;
+    gap: 1rem;
+    padding: 1.25rem;
     overflow-y: auto;
 }
 
 /* ============ 語言選擇列 ============ */
 .lang-bar {
     display: flex;
-    gap: 12px;
+    gap: 0.75rem;
     align-items: center;
 }
 
 .lang-select {
     flex: 1;
-    padding: 12px;
+    padding: 0.75rem;
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 0.75rem;
     color: var(--text-primary);
     font-size: 0.95rem;
     font-weight: 600;
@@ -148,13 +153,13 @@ html, body {
 .lang-select:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+    box-shadow: 0 0 0.5rem rgba(212, 175, 55, 0.3);
 }
 
 /* 對調按鈕 */
 .swap-btn {
-    width: 48px;
-    height: 48px;
+    width: 3rem;
+    height: 3rem;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--accent), var(--accent-light));
     color: var(--primary-dark);
@@ -168,7 +173,7 @@ html, body {
 
 .swap-btn:hover {
     transform: scale(1.1) rotate(180deg);
-    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+    box-shadow: 0 0.25rem 0.75rem rgba(212, 175, 55, 0.4);
 }
 
 .swap-btn:active {
@@ -178,12 +183,12 @@ html, body {
 /* ============ 翻譯結果框 ============ */
 .result-box {
     flex: 1;
-    min-height: 120px;
-    padding: 20px;
-    padding-bottom: 50px; /* 為右下角按鈕保留空間 */
+    min-height: 7.5rem;
+    padding: 1.25rem;
+    padding-bottom: 3.125rem; /* 為右下角按鈕保留空間 */
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 16px;
+    border-radius: 1rem;
     overflow-y: auto;
     line-height: 1.6;
     font-size: 1.1rem;
@@ -192,26 +197,26 @@ html, body {
 
 .tts-btn {
     position: absolute;
-    bottom: 12px;
-    right: 12px;
-    padding: 6px 14px;
+    bottom: 0.75rem;
+    right: 0.75rem;
+    padding: 0.375rem 0.875rem;
     background: linear-gradient(135deg, var(--accent), var(--accent-light));
     color: var(--primary-dark);
     border: none;
-    border-radius: 20px;
+    border-radius: 1.25rem;
     font-size: 0.85rem;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(212, 175, 55, 0.3);
+    box-shadow: 0 0.125rem 0.375rem rgba(212, 175, 55, 0.3);
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 0.25rem;
 }
 
 .tts-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(212, 175, 55, 0.4);
+    box-shadow: 0 0.25rem 0.625rem rgba(212, 175, 55, 0.4);
 }
 
 .tts-btn:active {
@@ -225,17 +230,17 @@ html, body {
 
 /* ============ 麥克風按鈕 ============ */
 .mic-btn {
-    padding: 16px;
+    padding: 1rem;
     background: linear-gradient(135deg, var(--accent), var(--accent-light));
     color: var(--primary-dark);
     border: none;
-    border-radius: 16px;
+    border-radius: 1rem;
     font-size: 1rem;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 0.625rem;
     cursor: pointer;
     transition: all 0.3s ease;
 }
@@ -243,22 +248,22 @@ html, body {
 .tools-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 15px;
-    margin-bottom: 15px;
+    gap: 0.75rem;
+    margin-top: 0.9375rem;
+    margin-bottom: 0.9375rem;
 }
 
 .tools-grid button {
-    height: 52px;
-    border-radius: 14px;
+    height: 3.25rem;
+    border-radius: 0.875rem;
     font-size: 0.95rem;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 0.5rem;
     border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0.25rem 0.9375rem rgba(0, 0, 0, 0.15);
     transition: all 0.2s ease;
     color: #fff;
     cursor: pointer;
@@ -280,7 +285,7 @@ html, body {
 
 .mic-btn:hover {
     transform: scale(1.02);
-    box-shadow: 0 6px 16px rgba(212, 175, 55, 0.4);
+    box-shadow: 0 0.375rem 1rem rgba(212, 175, 55, 0.4);
 }
 
 .mic-btn:active {
@@ -294,24 +299,24 @@ html, body {
 
 @keyframes pulse {
     0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7); }
-    50% { box-shadow: 0 0 0 12px rgba(255, 107, 107, 0); }
+    50% { box-shadow: 0 0 0 0.75rem rgba(255, 107, 107, 0); }
 }
 
 /* ============ 文字輸入區 ============ */
 .text-input-area {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 12px;
+    border-radius: 1rem;
+    padding: 0.75rem;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 0.625rem;
 }
 
 .text-input {
     width: 100%;
-    min-height: 100px;
-    padding: 12px;
+    min-height: 6.25rem;
+    padding: 0.75rem;
     background: transparent;
     border: none;
     color: var(--text-primary);
@@ -329,7 +334,7 @@ html, body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 4px;
+    padding: 0 0.25rem;
 }
 
 .char-count {
@@ -338,11 +343,11 @@ html, body {
 }
 
 .translate-btn {
-    padding: 10px 20px;
+    padding: 0.625rem 1.25rem;
     background: linear-gradient(135deg, var(--accent), var(--accent-light));
     color: var(--primary-dark);
     border: none;
-    border-radius: 10px;
+    border-radius: 0.625rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -350,7 +355,7 @@ html, body {
 
 .translate-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+    box-shadow: 0 0.25rem 0.75rem rgba(212, 175, 55, 0.4);
 }
 
 .translate-btn:active {
@@ -358,30 +363,30 @@ html, body {
 }
 
 /* ============ 響應式設計 ============ */
-@media (max-height: 700px) {
+@media (max-height: 43.75rem) {
     .content {
-        gap: 12px;
-        padding: 12px;
+        gap: 0.75rem;
+        padding: 0.75rem;
     }
     
     .result-box {
-        min-height: 80px;
+        min-height: 5rem;
     }
 }
 
 .status-dot {
     display: inline-block;
-    width: 10px;
-    height: 10px;
+    width: 0.625rem;
+    height: 0.625rem;
     background-color: #ff4d4d;
     border-radius: 50%;
-    margin-left: 8px;
+    margin-left: 0.5rem;
     transition: background-color 0.3s ease;
 }
 
 .status-dot.connected {
     background-color: #2ecc71;
-    box-shadow: 0 0 8px #2ecc71;
+    box-shadow: 0 0 0.5rem #2ecc71;
 }
 
 /* ============ 設定按鈕與彈窗樣式 ============ */
@@ -391,12 +396,12 @@ html, body {
 
 .settings-btn {
     position: absolute;
-    right: 20px;
+    right: 1.25rem;
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
-    font-size: 22px;
+    font-size: 1.375rem;
     cursor: pointer;
     color: var(--accent);
     transition: transform 0.3s ease, color 0.3s ease;
@@ -418,7 +423,7 @@ html, body {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(6px);
+    backdrop-filter: blur(0.375rem);
     justify-content: center;
     align-items: center;
 }
@@ -426,13 +431,13 @@ html, body {
 .modal-content {
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     border: 1px solid var(--border);
-    padding: 28px;
-    border-radius: 20px;
+    padding: 1.75rem;
+    border-radius: 1.25rem;
     width: 90%;
-    max-width: 420px;
+    max-width: 26.25rem;
     max-height: 85vh;
     overflow-y: auto;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0.75rem 2.5rem rgba(0, 0, 0, 0.6);
     position: relative;
     color: var(--text-primary);
     animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -451,9 +456,9 @@ html, body {
 
 .close-btn {
     position: absolute;
-    right: 18px;
-    top: 18px;
-    font-size: 26px;
+    right: 1.125rem;
+    top: 1.125rem;
+    font-size: 1.625rem;
     cursor: pointer;
     color: var(--text-secondary);
     transition: color 0.2s;
@@ -465,79 +470,79 @@ html, body {
 }
 
 .modal h2 {
-    margin-bottom: 24px;
+    margin-bottom: 1.5rem;
     color: var(--accent);
-    font-size: 22px;
+    font-size: 1.375rem;
     border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-    padding-bottom: 10px;
+    padding-bottom: 0.625rem;
     text-align: left;
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
     text-align: left;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 0.625rem;
     color: var(--text-secondary);
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-weight: 500;
 }
 
 .form-group input[type="text"],
 .form-group input[type="password"] {
     width: 100%;
-    padding: 12px 14px;
+    padding: 0.75rem 0.875rem;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(212, 175, 55, 0.25);
-    border-radius: 10px;
+    border-radius: 0.625rem;
     color: var(--text-primary);
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
-    font-size: 15px;
+    font-size: 0.9375rem;
 }
 
 .form-group input[type="text"]:focus,
 .form-group input[type="password"]:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 8px rgba(212, 175, 55, 0.2);
+    box-shadow: 0 0 0.5rem rgba(212, 175, 55, 0.2);
 }
 
 .form-group input[type="checkbox"] {
     accent-color: var(--accent);
     cursor: pointer;
-    width: 18px;
-    height: 18px;
+    width: 1.125rem;
+    height: 1.125rem;
 }
 
 .form-group input[type="range"] {
     width: 100%;
     accent-color: var(--accent);
-    height: 6px;
+    height: 0.375rem;
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
+    border-radius: 0.1875rem;
     outline: none;
 }
 
 .save-btn {
     width: 100%;
-    padding: 14px;
+    padding: 0.875rem;
     background: linear-gradient(135deg, var(--accent), var(--accent-light));
     border: none;
-    border-radius: 10px;
+    border-radius: 0.625rem;
     color: #1a0f2e;
     font-weight: bold;
-    font-size: 16px;
+    font-size: 1rem;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
-    margin-top: 10px;
+    margin-top: 0.625rem;
 }
 
 .save-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(212, 175, 55, 0.35);
+    box-shadow: 0 0.375rem 1.25rem rgba(212, 175, 55, 0.35);
 }
 
 .save-btn:active {
@@ -546,20 +551,20 @@ html, body {
 
 .toast-msg {
     position: fixed;
-    bottom: 24px;
+    bottom: 1.5rem;
     left: 50%;
-    transform: translateX(-50%) translateY(20px);
+    transform: translateX(-50%) translateY(1.25rem);
     background: rgba(26, 15, 46, 0.95);
     border: 1px solid var(--accent);
     color: var(--text-primary);
-    padding: 12px 24px;
-    border-radius: 50px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    padding: 0.75rem 1.5rem;
+    border-radius: 3.125rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.4);
     z-index: 3000;
     opacity: 0;
     transition: opacity 0.3s, transform 0.3s;
     pointer-events: none;
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 500;
 }
 
@@ -575,7 +580,7 @@ html, body {
 
 #faceView {
     padding: 0;
-    height: calc(100vh - 120px); /* 扣除頂部標題與底部的適當間距 */
+    height: calc(100vh - 7.5rem); /* 扣除頂部標題與底部的適當間距 */
     display: flex;
     flex-direction: column;
 }
@@ -583,7 +588,7 @@ html, body {
 .face-panel {
     flex: 1;
     display: flex;
-    padding: 20px;
+    padding: 1.25rem;
     overflow: hidden;
 }
 
@@ -600,7 +605,7 @@ html, body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 0.75rem;
 }
 
 .face-result {
@@ -615,11 +620,11 @@ html, body {
 }
 
 .face-mic {
-    padding: 14px !important;
+    padding: 0.875rem !important;
     font-size: 1rem !important;
     background: linear-gradient(135deg, var(--primary-light), var(--primary)) !important;
     border: 1px solid var(--border) !important;
-    border-radius: 50px !important;
+    border-radius: 3.125rem !important;
     color: var(--text-primary) !important;
     cursor: pointer;
     transition: all 0.2s ease !important;
@@ -627,14 +632,14 @@ html, body {
 }
 
 .face-mic:hover {
-    box-shadow: 0 0 10px rgba(212, 175, 55, 0.25) !important;
+    box-shadow: 0 0 0.625rem rgba(212, 175, 55, 0.25) !important;
     background: linear-gradient(135deg, var(--accent), var(--accent-light)) !important;
     color: #1a0f2e !important;
 }
 
 .face-mic.listening {
     background: #ff4d4d !important;
-    box-shadow: 0 0 15px rgba(255, 77, 77, 0.5) !important;
+    box-shadow: 0 0 0.9375rem rgba(255, 77, 77, 0.5) !important;
     color: white !important;
     border-color: #ff4d4d !important;
 }
@@ -643,11 +648,11 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 10px 0;
+    padding: 0.625rem 0;
     background: rgba(0, 0, 0, .3);
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: var(--text-secondary);
     font-weight: 700;
     letter-spacing: 1px;
@@ -655,14 +660,14 @@ html, body {
 
 .mode-btn {
     position: absolute;
-    left: 20px;
+    left: 1.25rem;
     top: 50%;
     transform: translateY(-50%);
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 6px 12px;
-    font-size: 14px;
+    border-radius: 1.25rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
     cursor: pointer;
     color: var(--accent);
     transition: all 0.3s ease;
@@ -673,33 +678,33 @@ html, body {
 .mode-btn:hover {
     background: rgba(255, 255, 255, 0.15);
     color: var(--accent-light);
-    box-shadow: 0 0 10px rgba(212, 175, 55, 0.25);
+    box-shadow: 0 0 0.625rem rgba(212, 175, 55, 0.25);
 }
 
 /* ============ 拍照翻譯樣式 ============ */
 .vision-preview img {
     max-width: 100%;
-    max-height: 250px;
-    border-radius: 8px;
+    max-height: 15.625rem;
+    border-radius: 0.5rem;
     border: 1px solid var(--border);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0.25rem 0.625rem rgba(0, 0, 0, 0.3);
 }
 
 #visionResult .form-group label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 0.3125rem;
     color: var(--accent);
 }
 
 /* ============ 匯率換算樣式 ============ */
 .tool-btn {
     position: absolute;
-    right: 60px;
+    right: 3.75rem;
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
-    font-size: 20px;
+    font-size: 1.25rem;
     cursor: pointer;
     color: var(--accent);
     transition: transform 0.3s ease, color 0.3s ease;
@@ -725,14 +730,14 @@ html, body {
 
 .cur-row {
     display: flex;
-    gap: 10px;
+    gap: 0.625rem;
     align-items: center;
-    margin: 15px 0;
+    margin: 0.9375rem 0;
 }
 
 #cur_swap {
-    width: 40px;
-    height: 40px;
+    width: 2.5rem;
+    height: 2.5rem;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--accent), var(--accent-light));
     color: var(--primary-dark);
@@ -748,7 +753,7 @@ html, body {
 
 #cur_swap:hover {
     transform: scale(1.1) rotate(180deg);
-    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+    box-shadow: 0 0.25rem 0.75rem rgba(212, 175, 55, 0.4);
 }
 
 .cur-result {
@@ -756,8 +761,8 @@ html, body {
     font-weight: bold;
     color: var(--accent);
     text-align: center;
-    margin: 20px 0 10px;
-    min-height: 35px;
+    margin: 1.25rem 0 0.625rem;
+    min-height: 2.1875rem;
     word-break: break-all;
 }
 
@@ -765,7 +770,7 @@ html, body {
     font-size: 0.9rem;
     color: var(--text-secondary);
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
 }
 
 /* ============ 天氣查詢樣式 ============ */
@@ -773,17 +778,17 @@ html, body {
     font-size: 1.3rem;
     font-weight: bold;
     color: var(--accent);
-    margin-bottom: 5px;
+    margin-bottom: 0.3125rem;
 }
 .wx-temp {
     font-size: 1.5rem;
     font-weight: bold;
-    margin-bottom: 8px;
+    margin-bottom: 0.5rem;
 }
 .wx-sub {
     font-size: 0.9rem;
     color: var(--text-secondary);
-    margin-bottom: 8px;
+    margin-bottom: 0.5rem;
     line-height: 1.4;
 }
 .wx-advice {
@@ -791,8 +796,8 @@ html, body {
     color: var(--accent-light);
     font-weight: 500;
     border-top: 1px dashed rgba(212, 175, 55, 0.2);
-    padding-top: 8px;
-    margin-top: 8px;
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
 }
 
 /* ===== Password Gate ===== */
@@ -818,25 +823,25 @@ html, body {
 
 .gate-box {
     background: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(1.25rem);
+    -webkit-backdrop-filter: blur(1.25rem);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 24px;
-    padding: 50px 45px;
+    border-radius: 1.5rem;
+    padding: 3.125rem 2.8125rem;
     width: 90%;
-    max-width: 440px;
+    max-width: 27.5rem;
     text-align: center;
     animation: gateIn 0.8s ease;
 }
 
 @keyframes gateIn {
-    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+    from { opacity: 0; transform: translateY(1.875rem) scale(0.95); }
     to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .gate-logo {
-    font-size: 64px;
-    margin-bottom: 10px;
+    font-size: 4rem;
+    margin-bottom: 0.625rem;
     animation: gateFloat 3s ease-in-out infinite;
 }
 
@@ -847,36 +852,36 @@ html, body {
 
 .gate-title {
     color: #fff;
-    font-size: 24px;
+    font-size: 1.5rem;
     font-weight: 700;
-    margin-bottom: 6px;
+    margin-bottom: 0.375rem;
 }
 
 .gate-subtitle {
     color: rgba(255, 255, 255, 0.6);
-    font-size: 14px;
-    margin-bottom: 8px;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
 }
 
 .gate-disclaimer {
     font-size: 0.7rem;
     color: rgba(255, 255, 255, 0.3);
-    margin-bottom: 24px;
+    margin-bottom: 1.5rem;
 }
 
 .gate-input-wrap {
     position: relative;
-    margin-bottom: 18px;
+    margin-bottom: 1.125rem;
 }
 
 .gate-input {
     width: 100%;
-    padding: 14px 50px 14px 20px;
-    border-radius: 14px;
+    padding: 0.875rem 3.125rem 0.875rem 1.25rem;
+    border-radius: 0.875rem;
     border: 1px solid rgba(255, 255, 255, 0.2);
     background: rgba(255, 255, 255, 0.08);
     color: #fff;
-    font-size: 16px;
+    font-size: 1rem;
     font-family: inherit;
     outline: none;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -884,7 +889,7 @@ html, body {
 
 .gate-input:focus {
     border-color: #f5c451;
-    box-shadow: 0 0 0 3px #f5c45133;
+    box-shadow: 0 0 0 0.1875rem #f5c45133;
 }
 
 .gate-input::placeholder {
@@ -893,48 +898,48 @@ html, body {
 
 .gate-toggle-pw {
     position: absolute;
-    right: 14px;
+    right: 0.875rem;
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
     color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
-    font-size: 18px;
-    padding: 4px;
+    font-size: 1.125rem;
+    padding: 0.25rem;
 }
 
 .gate-btn {
     width: 100%;
-    padding: 14px;
-    border-radius: 14px;
+    padding: 0.875rem;
+    border-radius: 0.875rem;
     border: none;
     background: linear-gradient(135deg, #f5c451, #f7d98a);
     color: #fff;
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 700;
     font-family: inherit;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px #f5c45140;
+    box-shadow: 0 0.25rem 0.9375rem #f5c45140;
 }
 
 .gate-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px #f5c45150;
+    box-shadow: 0 0.5rem 1.5625rem #f5c45150;
 }
 
 .gate-error {
     color: #ff6b6b;
-    font-size: 14px;
-    margin-top: 12px;
-    min-height: 20px;
+    font-size: 0.875rem;
+    margin-top: 0.75rem;
+    min-height: 1.25rem;
 }
 
 .gate-admin-toggle {
-    margin-top: 24px;
+    margin-top: 1.5rem;
     color: rgba(255, 255, 255, 0.35);
-    font-size: 13px;
+    font-size: 0.8125rem;
     cursor: pointer;
     transition: color 0.3s ease;
     user-select: none;
@@ -947,9 +952,9 @@ html, body {
 
 .admin-panel {
     display: none;
-    margin-top: 20px;
-    padding: 20px;
-    border-radius: 14px;
+    margin-top: 1.25rem;
+    padding: 1.25rem;
+    border-radius: 0.875rem;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     text-align: left;
@@ -959,27 +964,27 @@ html, body {
 
 .admin-panel h4 {
     color: rgba(255, 255, 255, 0.8);
-    font-size: 14px;
-    margin-bottom: 12px;
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
 }
 
 .admin-pw-list {
     list-style: none;
     margin: 0;
     padding: 0;
-    max-height: 120px;
+    max-height: 7.5rem;
     overflow-y: auto;
-    margin-bottom: 12px;
+    margin-bottom: 0.75rem;
 }
 
 .admin-pw-list li {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 6px 10px;
-    border-radius: 8px;
+    padding: 0.375rem 0.625rem;
+    border-radius: 0.5rem;
     color: rgba(255, 255, 255, 0.7);
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-family: 'Courier New', monospace;
 }
 
@@ -991,45 +996,45 @@ html, body {
     background: rgba(255, 80, 80, 0.3);
     border: none;
     color: #ff6b6b;
-    padding: 2px 10px;
-    border-radius: 6px;
+    padding: 0.125rem 0.625rem;
+    border-radius: 0.375rem;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 0.75rem;
 }
 
 .admin-add-row {
     display: flex;
-    gap: 8px;
+    gap: 0.5rem;
 }
 
 .admin-add-row input {
     flex: 1;
-    padding: 8px 12px;
-    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
     border: 1px solid rgba(255, 255, 255, 0.15);
     background: rgba(255, 255, 255, 0.06);
     color: #fff;
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-family: inherit;
     outline: none;
 }
 
 .admin-add-row button {
-    padding: 8px 16px;
-    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
     border: none;
     background: linear-gradient(135deg, #f5c451, #f7d98a);
     color: #fff;
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 600;
     cursor: pointer;
 }
 
 .admin-msg {
     color: rgba(255, 255, 255, 0.6);
-    font-size: 12px;
-    margin-top: 8px;
-    min-height: 16px;
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    min-height: 1rem;
 }
 
 /* ==========================================================================
@@ -1104,19 +1109,19 @@ html, body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: 16px 14px;
-    gap: 12px;
+    padding: 1rem 0.875rem;
+    gap: 0.75rem;
 }
 
 /* Card Styling */
 .card {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 20px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    border-radius: 1.125rem;
+    padding: 1.25rem;
+    box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(0.75rem);
+    -webkit-backdrop-filter: blur(0.75rem);
     transition: all 0.3s ease;
 }
 
@@ -1126,21 +1131,21 @@ html, body {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding-right: 2px;
+    gap: 0.75rem;
+    padding-right: 0.125rem;
 }
 
 /* Webkit scrollbar customization for premium look */
 #singleView::-webkit-scrollbar,
 .history-list::-webkit-scrollbar,
 .face-result::-webkit-scrollbar {
-    width: 4px;
+    width: 0.25rem;
 }
 #singleView::-webkit-scrollbar-thumb,
 .history-list::-webkit-scrollbar-thumb,
 .face-result::-webkit-scrollbar-thumb {
     background: rgba(59, 130, 246, 0.3);
-    border-radius: 4px;
+    border-radius: 0.25rem;
 }
 
 /* Header Mode Pill Selector Toggle */
@@ -1148,7 +1153,7 @@ html, body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 14px 18px;
+    padding: 0.875rem 1.125rem;
     border-bottom: 1px solid var(--border);
     background: rgba(0, 0, 0, 0.25);
     flex-shrink: 0;
@@ -1173,31 +1178,31 @@ html, body {
     display: flex;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 24px;
-    padding: 4px;
-    gap: 4px;
+    border-radius: 1.5rem;
+    padding: 0.25rem;
+    gap: 0.25rem;
 }
 
 .mode-toggle-btn {
     background: transparent;
     border: none;
     color: var(--text-secondary);
-    padding: 6px 14px;
-    border-radius: 20px;
+    padding: 0.375rem 0.875rem;
+    border-radius: 1.25rem;
     font-size: 0.85rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 0.25rem;
 }
 
 .mode-toggle-btn.active {
     background: rgba(59, 130, 246, 0.15);
     color: #ffffff;
     border: 1.5px solid #3b82f6;
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 0.625rem rgba(59, 130, 246, 0.4);
 }
 
 .settings-btn {
@@ -1207,7 +1212,7 @@ html, body {
     opacity: 0.8;
     background: none;
     border: none;
-    font-size: 22px;
+    font-size: 1.375rem;
     cursor: pointer;
     transition: opacity 0.2s;
     outline: none;
@@ -1221,16 +1226,16 @@ html, body {
 /* Language selector bar */
 .lang-bar {
     display: flex;
-    gap: 10px;
+    gap: 0.625rem;
     align-items: center;
 }
 
 .lang-select {
     flex: 1;
-    padding: 11px 14px;
+    padding: 0.6875rem 0.875rem;
     background: #13223f;
     border: 1px solid rgba(59, 130, 246, 0.2);
-    border-radius: 12px;
+    border-radius: 0.75rem;
     color: #ffffff;
     font-size: 0.95rem;
     font-weight: 600;
@@ -1268,8 +1273,8 @@ html, body {
 .engine-bar {
     display: flex;
     justify-content: center;
-    gap: 24px;
-    margin-bottom: 12px;
+    gap: 1.5rem;
+    margin-bottom: 0.75rem;
     font-weight: 600;
 }
 
@@ -1277,7 +1282,7 @@ html, body {
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 0.5rem;
     color: var(--text-secondary);
     font-size: 0.9rem;
     user-select: none;
@@ -1286,16 +1291,16 @@ html, body {
 .engine-radio {
     accent-color: #3b82f6;
     cursor: pointer;
-    width: 16px;
-    height: 16px;
+    width: 1rem;
+    height: 1rem;
 }
 
 /* Result Card Layout */
 .result-card {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    min-height: 130px;
+    gap: 0.375rem;
+    min-height: 8.125rem;
 }
 
 .box-label {
@@ -1310,7 +1315,7 @@ html, body {
     border: none !important;
     background: transparent !important;
     padding: 0 !important;
-    min-height: 50px !important;
+    min-height: 3.125rem !important;
     font-size: 1.15rem;
     color: #ffffff;
     line-height: 1.5;
@@ -1319,15 +1324,15 @@ html, body {
 .result-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
-    margin-top: 10px;
+    gap: 0.625rem;
+    margin-top: 0.625rem;
 }
 
 .result-actions button, .action-btn {
-    padding: 8px 16px !important;
+    padding: 0.5rem 1rem !important;
     background: rgba(255, 255, 255, 0.04) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 20px !important;
+    border-radius: 1.25rem !important;
     color: #ffffff !important;
     font-size: 0.85rem !important;
     font-weight: 600;
@@ -1335,7 +1340,7 @@ html, body {
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 0.375rem;
     box-shadow: none !important;
 }
 
@@ -1352,7 +1357,7 @@ html, body {
 .input-speech-container {
     display: flex !important;
     flex-direction: row !important;
-    gap: 12px !important;
+    gap: 0.75rem !important;
     width: 100%;
 }
 
@@ -1360,16 +1365,16 @@ html, body {
     flex: 7 !important;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    min-height: 160px !important;
-    padding: 16px !important;
+    gap: 0.625rem;
+    min-height: 10rem !important;
+    padding: 1rem !important;
 }
 
 .text-input {
     background: transparent !important;
     border: none !important;
     padding: 0 !important;
-    min-height: 90px !important;
+    min-height: 5.625rem !important;
     font-size: 1.1rem;
     resize: none;
     color: #ffffff;
@@ -1382,8 +1387,8 @@ html, body {
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    min-height: 160px !important;
-    padding: 16px !important;
+    min-height: 10rem !important;
+    padding: 1rem !important;
 }
 
 /* Circular Custom Microphone button */
@@ -1393,21 +1398,21 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 0.5rem;
     cursor: pointer;
     outline: none;
-    padding: 6px 0;
+    padding: 0.375rem 0;
     width: 100%;
     transition: all 0.3s ease;
 }
 
 .mic-circle {
-    width: 56px !important;
-    height: 56px !important;
+    width: 3.5rem !important;
+    height: 3.5rem !important;
     border-radius: 50%;
     background: radial-gradient(circle, #2563eb 0%, #1d4ed8 100%);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+    border: 0.125rem solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0.25rem 0.75rem rgba(37, 99, 235, 0.3), inset 0 0.125rem 0.25rem rgba(255, 255, 255, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1417,7 +1422,7 @@ html, body {
 
 .mic-btn-custom:hover .mic-circle {
     transform: scale(1.06);
-    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45);
+    box-shadow: 0 0.375rem 1.125rem rgba(37, 99, 235, 0.45);
 }
 
 .mic-btn-custom .mic-label {
@@ -1432,7 +1437,7 @@ html, body {
 .mic-btn-custom.recording .mic-circle {
     background: radial-gradient(circle, #ef4444 0%, #dc2626 100%) !important;
     animation: mic-pulse 1.5s infinite;
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.5) !important;
+    box-shadow: 0 0.25rem 0.75rem rgba(220, 38, 38, 0.5) !important;
 }
 
 .mic-btn-custom.recording .mic-label {
@@ -1447,37 +1452,37 @@ html, body {
 /* Translate Button CTA in speech card */
 .translate-btn-cta {
     width: 100%;
-    padding: 10px !important;
+    padding: 0.625rem !important;
     background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
     border: none;
-    border-radius: 10px !important;
+    border-radius: 0.625rem !important;
     color: #ffffff;
     font-weight: 700;
     font-size: 0.85rem !important;
     cursor: pointer;
-    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+    box-shadow: 0 0.25rem 0.625rem rgba(37, 99, 235, 0.25);
     transition: all 0.2s ease;
 }
 
 .translate-btn-cta:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35);
+    box-shadow: 0 0.375rem 0.875rem rgba(37, 99, 235, 0.35);
 }
 
 /* Quick Tools Card Grid (Always 4 columns) */
 .section-title {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-top: 10px;
-    margin-bottom: 2px;
+    gap: 0.5rem;
+    margin-top: 0.625rem;
+    margin-bottom: 0.125rem;
 }
 
 .title-line {
-    width: 4px;
-    height: 16px;
+    width: 0.25rem;
+    height: 1rem;
     background: #3b82f6;
-    border-radius: 2px;
+    border-radius: 0.125rem;
 }
 
 .section-title h2 {
@@ -1489,9 +1494,9 @@ html, body {
 .tools-grid {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr) !important;
-    gap: 8px !important;
-    margin-top: 8px !important;
-    margin-bottom: 12px !important;
+    gap: 0.5rem !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.75rem !important;
 }
 
 .tool-card {
@@ -1499,10 +1504,10 @@ html, body {
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
-    padding: 12px 6px !important;
+    padding: 0.75rem 0.375rem !important;
     height: auto !important;
-    min-height: 90px !important;
-    border-radius: 12px !important;
+    min-height: 5.625rem !important;
+    border-radius: 0.75rem !important;
     text-align: center !important;
     border: 1px solid rgba(255, 255, 255, 0.06) !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -1514,14 +1519,14 @@ html, body {
 }
 
 .tool-icon-wrapper {
-    width: 38px;
-    height: 38px;
+    width: 2.375rem;
+    height: 2.375rem;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.15rem;
-    margin-bottom: 6px;
+    margin-bottom: 0.375rem;
     transition: transform 0.3s ease;
 }
 
@@ -1533,7 +1538,7 @@ html, body {
     font-size: 0.8rem !important;
     font-weight: 700;
     color: #ffffff;
-    margin-bottom: 2px;
+    margin-bottom: 0.125rem;
 }
 
 .tool-desc {
@@ -1551,7 +1556,7 @@ html, body {
     color: #60a5fa;
 }
 .camera-card:hover {
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15) !important;
+    box-shadow: 0 0.25rem 0.75rem rgba(59, 130, 246, 0.15) !important;
     border-color: rgba(59, 130, 246, 0.45) !important;
 }
 
@@ -1564,7 +1569,7 @@ html, body {
     color: #c084fc;
 }
 .ask-card:hover {
-    box-shadow: 0 4px 12px rgba(147, 51, 234, 0.15) !important;
+    box-shadow: 0 0.25rem 0.75rem rgba(147, 51, 234, 0.15) !important;
     border-color: rgba(147, 51, 234, 0.45) !important;
 }
 
@@ -1577,7 +1582,7 @@ html, body {
     color: #4ade80;
 }
 .currency-card:hover {
-    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15) !important;
+    box-shadow: 0 0.25rem 0.75rem rgba(34, 197, 94, 0.15) !important;
     border-color: rgba(34, 197, 94, 0.45) !important;
 }
 
@@ -1590,7 +1595,7 @@ html, body {
     color: #fbbf24;
 }
 .weather-card:hover {
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15) !important;
+    box-shadow: 0 0.25rem 0.75rem rgba(245, 158, 11, 0.15) !important;
     border-color: rgba(245, 158, 11, 0.45) !important;
 }
 
@@ -1603,7 +1608,7 @@ html, body {
     color: #2dd4bf;
 }
 .stock-card:hover {
-    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15) !important;
+    box-shadow: 0 0.25rem 0.75rem rgba(13, 148, 136, 0.15) !important;
     border-color: rgba(13, 148, 136, 0.45) !important;
 }
 
@@ -1616,7 +1621,7 @@ html, body {
     color: #fef08a;
 }
 .map-card:hover {
-    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.15) !important;
+    box-shadow: 0 0.25rem 0.75rem rgba(234, 179, 8, 0.15) !important;
     border-color: rgba(234, 179, 8, 0.45) !important;
 }
 
@@ -1629,7 +1634,7 @@ html, body {
     color: #fca5a5;
 }
 .emergency-card:hover {
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15) !important;
+    box-shadow: 0 0.25rem 0.75rem rgba(239, 68, 68, 0.15) !important;
     border-color: rgba(239, 68, 68, 0.45) !important;
 }
 
@@ -1642,7 +1647,7 @@ html, body {
     color: #c084fc;
 }
 .phrase-card:hover {
-    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.15) !important;
+    box-shadow: 0 0.25rem 0.75rem rgba(168, 85, 247, 0.15) !important;
     border-color: rgba(168, 85, 247, 0.45) !important;
 }
 
@@ -1650,9 +1655,9 @@ html, body {
 .history-section {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-top: 5px;
-    padding: 16px !important;
+    gap: 0.625rem;
+    margin-top: 0.3125rem;
+    padding: 1rem !important;
 }
 
 .history-header {
@@ -1677,7 +1682,7 @@ html, body {
     transition: color 0.2s;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 0.25rem;
 }
 
 .clear-history-btn:hover {
@@ -1687,8 +1692,8 @@ html, body {
 .history-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    max-height: 120px;
+    gap: 0.375rem;
+    max-height: 7.5rem;
     overflow-y: auto;
 }
 
@@ -1696,10 +1701,10 @@ html, body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 14px;
+    padding: 0.625rem 0.875rem;
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.04);
-    border-radius: 10px;
+    border-radius: 0.625rem;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -1707,7 +1712,7 @@ html, body {
 .history-item:hover {
     background: rgba(59, 130, 246, 0.08);
     border-color: rgba(59, 130, 246, 0.2);
-    transform: translateX(2px);
+    transform: translateX(0.125rem);
 }
 
 .history-item-text {
@@ -1749,7 +1754,7 @@ html, body {
     height: 50%;
     display: flex;
     flex-direction: column;
-    padding: 8px 12px;
+    padding: 0.5rem 0.75rem;
     overflow: hidden; /* Prevent panels from stretching */
 }
 
@@ -1766,18 +1771,18 @@ html, body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 0.375rem;
     height: 100%;
     overflow: hidden;
 }
 
 #faceView .lang-select {
     width: auto !important;
-    max-width: 140px !important;
+    max-width: 8.75rem !important;
     align-self: center !important;
-    padding: 5px 10px !important;
+    padding: 0.3125rem 0.625rem !important;
     font-size: 0.82rem !important;
-    border-radius: 8px !important;
+    border-radius: 0.5rem !important;
     height: auto !important;
     font-weight: 700;
     flex: none !important; /* 確保不會在 column 容器中被垂直拉伸 */
@@ -1785,12 +1790,12 @@ html, body {
 
 .face-result {
     flex: 1;
-    min-height: 80px !important;
+    min-height: 5rem !important;
     overflow-y: auto !important; /* Allow scroll inside result only */
     background: rgba(255, 255, 255, 0.02) !important;
     border: 1px solid rgba(255, 255, 255, 0.04) !important;
-    border-radius: 12px !important;
-    padding: 12px !important;
+    border-radius: 0.75rem !important;
+    padding: 0.75rem !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1801,12 +1806,12 @@ html, body {
 }
 
 .face-mic {
-    padding: 6px 16px !important;
+    padding: 0.375rem 1rem !important;
     font-size: 0.8rem !important;
-    border-radius: 12px !important;
+    border-radius: 0.75rem !important;
     flex-shrink: 0;
     width: auto !important;
-    min-width: 110px !important;
+    min-width: 6.875rem !important;
 }
 
 .face-panel.top .face-mic {
@@ -1821,7 +1826,7 @@ html, body {
     height: 1px;
     background: rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
-    margin: 4px 0;
+    margin: 0.25rem 0;
 }
 
 /* Remove content padding when faceView is active for border-to-border layout */
@@ -1830,24 +1835,24 @@ html, body {
 }
 
 /* Support for very small devices */
-@media (max-width: 380px) {
+@media (max-width: 23.75rem) {
     .tools-grid {
-        gap: 6px !important;
+        gap: 0.375rem !important;
     }
     .tool-card {
-        min-height: 80px !important;
+        min-height: 5rem !important;
     }
     .tool-title {
         font-size: 0.75rem !important;
     }
     .tool-icon-wrapper {
-        width: 32px;
-        height: 32px;
+        width: 2rem;
+        height: 2rem;
         font-size: 1rem;
     }
     .mic-circle {
-        width: 48px !important;
-        height: 48px !important;
+        width: 3rem !important;
+        height: 3rem !important;
         font-size: 1.3rem !important;
     }
 }

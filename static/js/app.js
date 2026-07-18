@@ -12,7 +12,7 @@ window.onerror = function(message, source, lineno, colno, error) {
     if (!errDiv) {
         errDiv = document.createElement('div');
         errDiv.id = 'debugErrorBox';
-        errDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:#ff4d4d;color:white;padding:10px;z-index:9999;font-size:14px;text-align:center;word-break:break-all;font-weight:bold;box-shadow:0 2px 10px rgba(0,0,0,0.3);';
+        errDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:#ff4d4d;color:white;padding:0.625rem;z-index:9999;font-size:0.875rem;text-align:center;word-break:break-all;font-weight:bold;box-shadow:0 0.125rem 0.625rem rgba(0,0,0,0.3);';
         document.body.appendChild(errDiv);
     }
     errDiv.textContent = 'JS 錯誤：' + errorMsg;
@@ -25,11 +25,11 @@ function showDebugLog(msg) {
     if (!logDiv) {
         logDiv = document.createElement('div');
         logDiv.id = 'debugLogBox';
-        logDiv.style.cssText = 'position:fixed;bottom:10px;right:10px;width:300px;max-height:200px;overflow-y:auto;background:rgba(0,0,0,0.85);color:#00ff00;padding:10px;z-index:9999;font-size:11px;font-family:monospace;border-radius:5px;border:1px solid #00ff00;word-break:break-all;';
+        logDiv.style.cssText = 'position:fixed;bottom:0.625rem;right:0.625rem;width:18.75rem;max-height:12.5rem;overflow-y:auto;background:rgba(0,0,0,0.85);color:#00ff00;padding:0.625rem;z-index:9999;font-size:0.6875rem;font-family:monospace;border-radius:0.3125rem;border:1px solid #00ff00;word-break:break-all;';
         document.body.appendChild(logDiv);
     }
     const p = document.createElement('p');
-    p.style.margin = '2px 0';
+    p.style.margin = '0.125rem 0';
     p.textContent = new Date().toLocaleTimeString() + ': ' + msg;
     logDiv.appendChild(p);
     logDiv.scrollTop = logDiv.scrollHeight;
@@ -1011,7 +1011,7 @@ function providerBody() {
     };
 }
 
-// 相機影像 client 端縮圖：省流量、加速雲端辨識（Gemini 最佳邊長約 1568px）
+// 相機影像 client 端縮圖：省流量、加速雲端辨識（Gemini 最佳邊長約 98rem）
 function fileToDownscaledDataURL(file, maxDim = 1568, quality = 0.85) {
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -1085,7 +1085,7 @@ if ($('cameraInput')) {
             $('visionStatus').textContent = '影像處理中…';
             const dataURL = await fileToDownscaledDataURL(file);
             currentVisionDataURL = dataURL;
-            $('visionPreview').innerHTML = `<img src="${dataURL}" alt="preview" style="max-width: 100%; max-height: 300px; border-radius: 5px;">`;
+            $('visionPreview').innerHTML = `<img src="${dataURL}" alt="preview" style="max-width: 100%; max-height: 18.75rem; border-radius: 0.3125rem;">`;
             $('visionPreview').classList.remove('hidden');
             $('visionStatus').textContent = '雲端辨識與翻譯中…（約數秒）';
             const target = byId($('vision_target').value).name;
@@ -1494,7 +1494,7 @@ window.addEventListener('popstate', (e) => {
 async function loadMarketStats() {
     const listEl = $('market_list');
     if (!listEl) return;
-    listEl.innerHTML = '<div style="text-align: center; color: var(--text-secondary); font-size: 0.85rem; padding: 15px 0;">📊 行情刷新中…</div>';
+    listEl.innerHTML = '<div style="text-align: center; color: var(--text-secondary); font-size: 0.85rem; padding: 0.9375rem 0;">📊 行情刷新中…</div>';
     
     try {
         const res = await fetch('/api/stock/market');
@@ -1507,7 +1507,7 @@ async function loadMarketStats() {
             const color = isUp ? '#ff4d4d' : '#22c55e'; // 紅漲綠跌
             
             return `
-                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 0.5rem 0.75rem; border-radius: 0.5rem;">
                     <div>
                         <div style="font-size: 0.85rem; font-weight: bold; color: var(--text-primary);">${item.name}</div>
                         <div style="font-size: 0.7rem; color: var(--text-secondary);">${item.symbol}</div>
@@ -1520,7 +1520,7 @@ async function loadMarketStats() {
             `;
         }).join('');
     } catch(e) {
-        listEl.innerHTML = `<div style="text-align: center; color: #ff4d4d; font-size: 0.85rem; padding: 15px 0;">❌ 行情載入失敗 (${e.message})</div>`;
+        listEl.innerHTML = `<div style="text-align: center; color: #ff4d4d; font-size: 0.85rem; padding: 0.9375rem 0;">❌ 行情載入失敗 (${e.message})</div>`;
     }
 }
 
@@ -1655,16 +1655,16 @@ function renderEmergencyNumbers() {
     const info = EMERGENCY_NUMBERS[tgtLang] || EMERGENCY_NUMBERS['en'];
     
     listEl.innerHTML = `
-        <div style="font-size: 1rem; font-weight: bold; color: #ff4d4d; margin-bottom: 8px; text-align: center;">📍 當前國家/地區：${info.country}</div>
+        <div style="font-size: 1rem; font-weight: bold; color: #ff4d4d; margin-bottom: 0.5rem; text-align: center;">📍 當前國家/地區：${info.country}</div>
         <a href="tel:${info.police}" style="text-decoration: none;">
-            <button class="save-btn" style="margin-top: 0; background: #ef4444; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1.05rem; border: none;">📞 報警撥打：${info.police}</button>
+            <button class="save-btn" style="margin-top: 0; background: #ef4444; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 1.05rem; border: none;">📞 報警撥打：${info.police}</button>
         </a>
         <a href="tel:${info.ambulance}" style="text-decoration: none;">
-            <button class="save-btn" style="margin-top: 0; background: #ea580c; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1.05rem; border: none;">🚑 救護車撥打：${info.ambulance}</button>
+            <button class="save-btn" style="margin-top: 0; background: #ea580c; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 1.05rem; border: none;">🚑 救護車撥打：${info.ambulance}</button>
         </a>
         ${info.ambulance !== info.fire ? `
         <a href="tel:${info.fire}" style="text-decoration: none;">
-            <button class="save-btn" style="margin-top: 0; background: #dc2626; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1.05rem; border: none;">🔥 消防局撥打：${info.fire}</button>
+            <button class="save-btn" style="margin-top: 0; background: #dc2626; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 1.05rem; border: none;">🔥 消防局撥打：${info.fire}</button>
         </a>` : ''}
     `;
 }
@@ -1713,7 +1713,7 @@ async function renderPhrases() {
         const cacheKey = `${tgtId}_${cat}_${idx}`;
         const trans = translatedPhrasesCache[cacheKey] || '翻譯載入中…';
         return `
-            <button class="save-btn phrase-item-btn" data-text="${escapeHtml(trans)}" data-bcp="${tgtBcp}" data-key="${cacheKey}" data-source="${escapeHtml(ph)}" style="margin-top: 0; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.06); color: white; display: flex; flex-direction: column; align-items: flex-start; padding: 10px 14px; text-align: left; border-radius: 10px; gap: 4px; width: 100%; cursor: pointer;">
+            <button class="save-btn phrase-item-btn" data-text="${escapeHtml(trans)}" data-bcp="${tgtBcp}" data-key="${cacheKey}" data-source="${escapeHtml(ph)}" style="margin-top: 0; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.06); color: white; display: flex; flex-direction: column; align-items: flex-start; padding: 0.625rem 0.875rem; text-align: left; border-radius: 0.625rem; gap: 0.25rem; width: 100%; cursor: pointer;">
                 <span style="font-size: 0.78rem; color: var(--text-secondary);">${ph}</span>
                 <span class="phrase-trans-text" style="font-size: 0.95rem; font-weight: 700; color: #c084fc;">${trans}</span>
             </button>

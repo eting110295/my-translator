@@ -31,8 +31,8 @@
             <div class="gate-admin-toggle" id="adminToggle">&#128274; 管理員</div>
             <div class="admin-panel" id="adminPanel">
                 <h4>密碼管理（需管理員密碼）</h4>
-                <div class="gate-input-wrap" style="margin-bottom:12px;">
-                    <input type="password" class="gate-input" id="adminPwInput" placeholder="管理員密碼..." style="font-size:14px;padding:10px 16px;">
+                <div class="gate-input-wrap" style="margin-bottom:0.75rem;">
+                    <input type="password" class="gate-input" id="adminPwInput" placeholder="管理員密碼..." style="font-size:0.875rem;padding:0.625rem 1rem;">
                 </div>
                 <div id="adminContent" style="display:none;">
                     <ul class="admin-pw-list" id="pwList"></ul>
@@ -41,7 +41,7 @@
                         <button id="addPwBtn">新增</button>
                     </div>
                     <div class="admin-msg" id="adminMsg"></div>
-                    <button class="gate-btn" id="enterSiteBtn" style="margin-top:12px;font-size:14px;padding:10px;">進入網站</button>
+                    <button class="gate-btn" id="enterSiteBtn" style="margin-top:0.75rem;font-size:0.875rem;padding:0.625rem;">進入網站</button>
                 </div>
             </div>
         </div>
@@ -253,7 +253,7 @@
                 <input type="password" id="cfgTavilyKey" placeholder="請輸入 Tavily 搜尋金鑰，留空則使用免搜尋">
             </div>
             <div class="form-group">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; user-select: none;">
                     <input type="checkbox" id="cfgAutoSpeak"> 翻譯後自動語音朗讀
                 </label>
             </div>
@@ -263,7 +263,7 @@
             </div>
             <div class="form-group">
                 <label for="cfgTheme">背景風格主題：</label>
-                <select id="cfgTheme" class="lang-select" style="width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: var(--bg-card); color: var(--text-primary); font-family: inherit;">
+                <select id="cfgTheme" class="lang-select" style="width: 100%; border: 1px solid var(--border); border-radius: 0.5rem; padding: 0.625rem; background: var(--bg-card); color: var(--text-primary); font-family: inherit;">
                     <option value="purple">🔮 紫金</option>
                     <option value="ocean">🌊 海洋藍</option>
                     <option value="forest">🌲 森林綠</option>
@@ -276,26 +276,26 @@
 
     <!-- 拍照翻譯彈窗 -->
     <div id="visionModal" class="modal hidden">
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content" style="max-width: 37.5rem;">
             <span id="vision_close" class="close-btn">&times;</span>
             <h2 id="visionTitle">📷 拍照翻譯</h2>
             
-            <div id="visionPreview" class="vision-preview hidden" style="text-align: center; margin: 15px 0;"></div>
+            <div id="visionPreview" class="vision-preview hidden" style="text-align: center; margin: 0.9375rem 0;"></div>
             
-            <p id="visionStatus" style="text-align: center; color: var(--text-secondary); margin: 10px 0; font-weight: bold;"></p>
+            <p id="visionStatus" style="text-align: center; color: var(--text-secondary); margin: 0.625rem 0; font-weight: bold;"></p>
             
             <div id="visionResult" class="hidden">
                 <div class="form-group">
                     <label style="font-weight: bold;">內容摘要：</label>
-                    <div id="visionSummary" class="result-box" style="min-height: 50px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 5px; margin-top: 5px; white-space: pre-wrap; text-align: left;"></div>
+                    <div id="visionSummary" class="result-box" style="min-height: 3.125rem; background: rgba(255,255,255,0.05); padding: 0.625rem; border-radius: 0.3125rem; margin-top: 0.3125rem; white-space: pre-wrap; text-align: left;"></div>
                 </div>
-                <div class="form-group" style="margin-top: 15px;">
+                <div class="form-group" style="margin-top: 0.9375rem;">
                     <label style="font-weight: bold;">翻譯結果：</label>
-                    <div id="visionTranslation" class="result-box" style="min-height: 80px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 5px; margin-top: 5px; white-space: pre-wrap; text-align: left;"></div>
+                    <div id="visionTranslation" class="result-box" style="min-height: 5rem; background: rgba(255,255,255,0.05); padding: 0.625rem; border-radius: 0.3125rem; margin-top: 0.3125rem; white-space: pre-wrap; text-align: left;"></div>
                 </div>
             </div>
             
-            <div class="form-group" style="margin-top: 15px; display: flex; align-items: center; gap: 10px; text-align: left;">
+            <div class="form-group" style="margin-top: 0.9375rem; display: flex; align-items: center; gap: 0.625rem; text-align: left;">
                 <label for="vision_target" style="font-weight: bold;">翻譯目標語言：</label>
                 <select id="vision_target" class="lang-select" style="flex: 1;">
                     <option value="zh-TW">繁體中文</option>
@@ -305,7 +305,7 @@
                 </select>
             </div>
             
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <div style="display: flex; gap: 0.625rem; margin-top: 1.25rem;">
                 <button id="vision_speak" class="save-btn" style="flex: 1; background: var(--accent);">🔊 朗讀</button>
                 <button id="vision_close_btn" class="save-btn" style="flex: 1; background: #555;">關閉</button>
             </div>
@@ -314,12 +314,12 @@
 
     <!-- 匯率換算彈窗 -->
     <div class="modal hidden" id="currencyModal">
-        <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-content" style="max-width: 25rem;">
             <span id="cur_close_x" class="close-btn">&times;</span>
             <h2>💱 匯率換算</h2>
             <div class="form-group">
                 <label for="cur_amount" style="font-weight: bold;">輸入金額：</label>
-                <input type="number" id="cur_amount" class="text-input" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(212,175,55,0.25); border-radius: 10px; padding: 12px 14px;" value="1" min="0" step="any">
+                <input type="number" id="cur_amount" class="text-input" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(212,175,55,0.25); border-radius: 0.625rem; padding: 0.75rem 0.875rem;" value="1" min="0" step="any">
             </div>
             <div class="cur-row">
                 <select id="cur_from" class="lang-select"></select>
@@ -328,7 +328,7 @@
             </div>
             <div class="cur-result" id="cur_result">—</div>
             <div class="cur-rate" id="cur_rate"></div>
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <div style="display: flex; gap: 0.625rem; margin-top: 0.9375rem;">
                 <button id="cur_convert" class="save-btn" style="flex: 1; margin-top: 0;">換算</button>
                 <button id="cur_close" class="save-btn" style="flex: 1; margin-top: 0; background: #555;">關閉</button>
             </div>
@@ -337,116 +337,116 @@
 
     <!-- 天氣查詢彈窗 -->
     <div class="modal hidden" id="weatherModal">
-        <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-content" style="max-width: 25rem;">
             <span id="wx_close_x" class="close-btn">&times;</span>
             <h2>🌤️ 天氣查詢</h2>
-            <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 12px;">
+            <div class="form-group" style="display: flex; gap: 0.625rem; margin-bottom: 0.75rem;">
                 <input type="text" id="wx_place" placeholder="例如：那霸、東京、台北…" style="flex: 1;">
-                <button class="save-btn" id="wx_go" style="margin-top: 0; width: auto; padding: 0 20px; background: var(--accent); color: #1a0f2e;">查詢</button>
+                <button class="save-btn" id="wx_go" style="margin-top: 0; width: auto; padding: 0 1.25rem; background: var(--accent); color: #1a0f2e;">查詢</button>
             </div>
-            <button class="save-btn" id="wx_geo" style="background: var(--primary-light); color: var(--text-primary); border: 1px solid var(--border); margin-top: 5px;">📍 用目前位置</button>
-            <div id="wx_result" class="wx-result hidden" style="margin-top: 15px; text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid var(--border);"></div>
-            <div id="wx_status" class="hint" style="margin-top: 10px; text-align: center; color: var(--text-secondary);"></div>
-            <button id="wx_close" class="save-btn" style="background: #555; margin-top: 15px;">關閉</button>
+            <button class="save-btn" id="wx_geo" style="background: var(--primary-light); color: var(--text-primary); border: 1px solid var(--border); margin-top: 0.3125rem;">📍 用目前位置</button>
+            <div id="wx_result" class="wx-result hidden" style="margin-top: 0.9375rem; text-align: left; background: rgba(255,255,255,0.05); padding: 0.9375rem; border-radius: 0.625rem; border: 1px solid var(--border);"></div>
+            <div id="wx_status" class="hint" style="margin-top: 0.625rem; text-align: center; color: var(--text-secondary);"></div>
+            <button id="wx_close" class="save-btn" style="background: #555; margin-top: 0.9375rem;">關閉</button>
         </div>
     </div>
 
     <!-- 旅遊問答彈窗 -->
     <div class="modal hidden" id="askModal">
-        <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-content" style="max-width: 31.25rem;">
             <span id="ask_close_x" class="close-btn">&times;</span>
             <h2>💬 旅遊問答</h2>
             <div class="form-group" style="position: relative;">
-                <textarea id="ask_q" class="text-input" placeholder="想問什麼旅遊問題？例如：淺草附近有什麼好吃的" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(212,175,55,0.25); border-radius: 10px; min-height: 80px; padding-bottom: 40px;"></textarea>
-                <button id="ask_mic_btn" style="position: absolute; bottom: 8px; right: 8px; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px; border: none; outline: none; transition: opacity 0.3s;">🎙️ 語音輸入</button>
+                <textarea id="ask_q" class="text-input" placeholder="想問什麼旅遊問題？例如：淺草附近有什麼好吃的" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(212,175,55,0.25); border-radius: 0.625rem; min-height: 5rem; padding-bottom: 2.5rem;"></textarea>
+                <button id="ask_mic_btn" style="position: absolute; bottom: 0.5rem; right: 0.5rem; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: #fff; padding: 0.25rem 0.625rem; border-radius: 0.75rem; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; border: none; outline: none; transition: opacity 0.3s;">🎙️ 語音輸入</button>
             </div>
-            <div id="ask_status" class="hint" style="margin-top: 5px; text-align: center; color: var(--text-secondary);"></div>
+            <div id="ask_status" class="hint" style="margin-top: 0.3125rem; text-align: center; color: var(--text-secondary);"></div>
             
-            <div id="ask_answer" class="result-box hidden" style="margin-top: 15px; text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid var(--border); min-height: 100px; max-height: 250px; overflow-y: auto; white-space: pre-wrap;"></div>
+            <div id="ask_answer" class="result-box hidden" style="margin-top: 0.9375rem; text-align: left; background: rgba(255,255,255,0.05); padding: 0.9375rem; border-radius: 0.625rem; border: 1px solid var(--border); min-height: 6.25rem; max-height: 15.625rem; overflow-y: auto; white-space: pre-wrap;"></div>
             
-            <div id="ask_sources" class="ask-sources" style="margin-top: 10px; text-align: left; font-size: 0.9rem;"></div>
+            <div id="ask_sources" class="ask-sources" style="margin-top: 0.625rem; text-align: left; font-size: 0.9rem;"></div>
             
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <div style="display: flex; gap: 0.625rem; margin-top: 1.25rem;">
                 <button id="ask_go" class="save-btn" style="flex: 1; background: var(--accent); color: #1a0f2e; margin-top: 0;">送出</button>
                 <button id="ask_speak" class="save-btn" style="flex: 1; background: var(--primary-light); color: var(--text-primary); border: 1px solid var(--border); margin-top: 0;">🔊 朗讀</button>
             </div>
-            <button id="ask_close" class="save-btn" style="background: #555; margin-top: 15px;">關閉</button>
+            <button id="ask_close" class="save-btn" style="background: #555; margin-top: 0.9375rem;">關閉</button>
         </div>
     </div>
 
     <!-- 股價查詢彈窗 -->
     <div class="modal hidden" id="stockModal">
-        <div class="modal-content" style="max-width: 420px; max-height: 85vh; display: flex; flex-direction: column;">
+        <div class="modal-content" style="max-width: 26.25rem; max-height: 85vh; display: flex; flex-direction: column;">
             <span id="stock_close_x" class="close-btn">&times;</span>
-            <h2 style="flex-shrink: 0; margin-bottom: 12px;">📊 今日主要股市行情</h2>
+            <h2 style="flex-shrink: 0; margin-bottom: 0.75rem;">📊 今日主要股市行情</h2>
             
             <!-- 熱門大盤與權值股行情區 -->
-            <div id="market_section" style="flex-grow: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 4px; display: flex; flex-direction: column; gap: 8px;">
-                <div id="market_list" style="display: flex; flex-direction: column; gap: 8px;">
-                    <div style="text-align: center; color: var(--text-secondary); font-size: 0.85rem; padding: 15px 0;">行情載入中…</div>
+            <div id="market_section" style="flex-grow: 1; overflow-y: auto; margin-bottom: 0.9375rem; padding-right: 0.25rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                <div id="market_list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div style="text-align: center; color: var(--text-secondary); font-size: 0.85rem; padding: 0.9375rem 0;">行情載入中…</div>
                 </div>
             </div>
 
             <!-- 個股自訂查詢區 -->
-            <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; flex-shrink: 0;">
-                <h3 style="font-size: 0.85rem; margin-bottom: 8px; color: var(--text-primary);">🔍 搜尋其他個股代號</h3>
-                <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 0;">
-                    <input type="text" id="stock_symbol" placeholder="例：2317.TW (鴻海)、TSLA (特斯拉)" style="flex: 1; text-transform: uppercase; font-size: 0.85rem; padding: 8px 12px;">
-                    <button class="save-btn" id="stock_go" style="margin-top: 0; width: auto; padding: 0 15px; background: #3b82f6; color: #ffffff; font-size: 0.85rem;">查詢</button>
+            <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.75rem; flex-shrink: 0;">
+                <h3 style="font-size: 0.85rem; margin-bottom: 0.5rem; color: var(--text-primary);">🔍 搜尋其他個股代號</h3>
+                <div class="form-group" style="display: flex; gap: 0.625rem; margin-bottom: 0;">
+                    <input type="text" id="stock_symbol" placeholder="例：2317.TW (鴻海)、TSLA (特斯拉)" style="flex: 1; text-transform: uppercase; font-size: 0.85rem; padding: 0.5rem 0.75rem;">
+                    <button class="save-btn" id="stock_go" style="margin-top: 0; width: auto; padding: 0 0.9375rem; background: #3b82f6; color: #ffffff; font-size: 0.85rem;">查詢</button>
                 </div>
             </div>
 
-            <div id="stock_result" class="hidden" style="margin-top: 12px; text-align: left; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; border: 1px solid var(--border); flex-shrink: 0;">
+            <div id="stock_result" class="hidden" style="margin-top: 0.75rem; text-align: left; background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 0.625rem; border: 1px solid var(--border); flex-shrink: 0;">
                 <div style="font-size: 0.95rem; font-weight: bold; color: #3b82f6;" id="stock_title">—</div>
-                <div style="font-size: 1.4rem; font-weight: bold; margin-top: 4px;" id="stock_price">—</div>
-                <div style="font-size: 0.85rem; margin-top: 2px;" id="stock_change">—</div>
+                <div style="font-size: 1.4rem; font-weight: bold; margin-top: 0.25rem;" id="stock_price">—</div>
+                <div style="font-size: 0.85rem; margin-top: 0.125rem;" id="stock_change">—</div>
             </div>
             
-            <div id="stock_status" class="hint" style="margin-top: 8px; text-align: center; color: var(--text-secondary); flex-shrink: 0;"></div>
-            <button id="stock_close" class="save-btn" style="background: #555; margin-top: 15px; flex-shrink: 0;">關閉</button>
+            <div id="stock_status" class="hint" style="margin-top: 0.5rem; text-align: center; color: var(--text-secondary); flex-shrink: 0;"></div>
+            <button id="stock_close" class="save-btn" style="background: #555; margin-top: 0.9375rem; flex-shrink: 0;">關閉</button>
         </div>
     </div>
 
     <!-- 地圖導航彈窗 -->
     <div class="modal hidden" id="mapModal">
-        <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-content" style="max-width: 25rem;">
             <span id="map_close_x" class="close-btn">&times;</span>
             <h2>🗺️ 地圖導航</h2>
-            <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 12px;">
+            <div class="form-group" style="display: flex; gap: 0.625rem; margin-bottom: 0.75rem;">
                 <input type="text" id="map_place" placeholder="輸入目的地：東京鐵塔、台北101…" style="flex: 1;">
-                <button class="save-btn" id="map_go" style="margin-top: 0; width: auto; padding: 0 20px; background: #3b82f6; color: #ffffff;">查詢</button>
+                <button class="save-btn" id="map_go" style="margin-top: 0; width: auto; padding: 0 1.25rem; background: #3b82f6; color: #ffffff;">查詢</button>
             </div>
-            <div id="map_result" class="hidden" style="margin-top: 15px; text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid var(--border);">
-                <div id="map_summary" style="font-size: 0.95rem; line-height: 1.5; color: var(--text-primary); margin-bottom: 12px; white-space: pre-wrap;"></div>
-                <button id="map_link" class="save-btn" style="margin-top: 0; background: #2563eb; color: #ffffff; display: flex; align-items: center; justify-content: center; gap: 8px;">🚗 開啟 Google 地圖導航</button>
+            <div id="map_result" class="hidden" style="margin-top: 0.9375rem; text-align: left; background: rgba(255,255,255,0.05); padding: 0.9375rem; border-radius: 0.625rem; border: 1px solid var(--border);">
+                <div id="map_summary" style="font-size: 0.95rem; line-height: 1.5; color: var(--text-primary); margin-bottom: 0.75rem; white-space: pre-wrap;"></div>
+                <button id="map_link" class="save-btn" style="margin-top: 0; background: #2563eb; color: #ffffff; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">🚗 開啟 Google 地圖導航</button>
             </div>
-            <div id="map_status" class="hint" style="margin-top: 10px; text-align: center; color: var(--text-secondary);"></div>
-            <button id="map_close" class="save-btn" style="background: #555; margin-top: 15px;">關閉</button>
+            <div id="map_status" class="hint" style="margin-top: 0.625rem; text-align: center; color: var(--text-secondary);"></div>
+            <button id="map_close" class="save-btn" style="background: #555; margin-top: 0.9375rem;">關閉</button>
         </div>
     </div>
 
     <!-- 緊急聯絡彈窗 -->
     <div class="modal hidden" id="emergencyModal">
-        <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-content" style="max-width: 25rem;">
             <span id="emergency_close_x" class="close-btn">&times;</span>
             <h2>🚨 緊急聯絡</h2>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 15px; line-height: 1.4;">
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.9375rem; line-height: 1.4;">
                 已自動偵測您的翻譯目標國家/地區，為您提供當地的緊急求助電話。請點擊直接撥打：
             </p>
-            <div id="emergency_list" style="display: flex; flex-direction: column; gap: 10px;">
+            <div id="emergency_list" style="display: flex; flex-direction: column; gap: 0.625rem;">
                 <!-- 動態插入緊急電話按鈕 -->
             </div>
-            <button id="emergency_close" class="save-btn" style="background: #555; margin-top: 20px;">關閉</button>
+            <button id="emergency_close" class="save-btn" style="background: #555; margin-top: 1.25rem;">關閉</button>
         </div>
     </div>
 
     <!-- 常用句庫彈窗 -->
     <div class="modal hidden" id="phraseModal">
-        <div class="modal-content" style="max-width: 400px; max-height: 85vh; display: flex; flex-direction: column;">
+        <div class="modal-content" style="max-width: 25rem; max-height: 85vh; display: flex; flex-direction: column;">
             <span id="phrase_close_x" class="close-btn">&times;</span>
             <h2>📖 實用旅用句</h2>
-            <div class="form-group" style="margin-bottom: 12px; flex-shrink: 0;">
-                <label for="phrase_category" style="font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 6px;">選擇場景分類：</label>
+            <div class="form-group" style="margin-bottom: 0.75rem; flex-shrink: 0;">
+                <label for="phrase_category" style="font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 0.375rem;">選擇場景分類：</label>
                 <select id="phrase_category" class="lang-select" style="width: 100%;">
                     <option value="greetings">👋 問候禮貌</option>
                     <option value="dining">🍴 餐飲點餐</option>
@@ -454,13 +454,13 @@
                     <option value="emergency">🆘 緊急求助</option>
                 </select>
             </div>
-            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 15px; flex-shrink: 0;">
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.9375rem; flex-shrink: 0;">
                 點擊句子可以直接用目標語言語音朗讀（TTS）發音：
             </p>
-            <div id="phrase_list" style="display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex-grow: 1; padding-right: 4px;">
+            <div id="phrase_list" style="display: flex; flex-direction: column; gap: 0.625rem; overflow-y: auto; flex-grow: 1; padding-right: 0.25rem;">
                 <!-- 動態插入常用句 -->
             </div>
-            <button id="phrase_close" class="save-btn" style="background: #555; margin-top: 20px; flex-shrink: 0;">關閉</button>
+            <button id="phrase_close" class="save-btn" style="background: #555; margin-top: 1.25rem; flex-shrink: 0;">關閉</button>
         </div>
     </div>
 
