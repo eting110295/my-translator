@@ -1504,7 +1504,7 @@ async function loadMarketStats() {
         listEl.innerHTML = d.data.map(item => {
             const isUp = item.change >= 0;
             const sign = isUp ? '▲' : '▼';
-            const color = isUp ? '#ff4d4d' : '#2dd4bf'; // 紅漲綠跌
+            const color = isUp ? '#ff4d4d' : '#22c55e'; // 紅漲綠跌
             
             return `
                 <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px;">
@@ -1540,7 +1540,7 @@ async function doStockQuery() {
         $('stock_title').textContent = `${d.symbol} 市場常規價格`;
         $('stock_price').textContent = `${d.price} ${d.currency}`;
         const isUp = d.change >= 0;
-        $('stock_change').innerHTML = `<span style="color: ${isUp ? '#ff4d4d' : '#2dd4bf'}; font-weight: bold;">${isUp ? '▲' : '▼'} ${Math.abs(d.change)} (${d.percent}%)</span>`;
+        $('stock_change').innerHTML = `<span style="color: ${isUp ? '#ff4d4d' : '#22c55e'}; font-weight: bold;">${isUp ? '▲' : '▼'} ${Math.abs(d.change)} (${d.percent}%)</span>`;
         $('stock_result').classList.remove('hidden');
         $('stock_status').textContent = '';
     } catch (e) { $('stock_status').textContent = '❌ ' + e.message; }
